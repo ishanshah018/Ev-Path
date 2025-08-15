@@ -1,38 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { EVProvider } from './contexts/EVContext';
 import Header from './components/Header';
 import MobileNav from './components/MobileNav';
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import OnboardingPage from './pages/OnboardingPage';
-import DashboardPage from './pages/DashboardPage';
-import MapPage from './pages/MapPage';
-import TripPlannerPage from './pages/TripPlannerPage';
-import ManageEVsPage from './pages/ManageEVsPage';
-import SettingsPage from './pages/SettingsPage';
-import FeaturesPage from './pages/FeaturesPage';
+import LoginPage from './pages/Login';
+import SignupPage from './pages/Signup';
+import OnboardingPage from './pages/Onboarding';
+import DashboardPage from './pages/Dashboard';
+import MapPage from './pages/Map';
+import TripPlannerPage from './pages/TripPlanner';
+import ManageEVsPage from './pages/ManageEV';
+import SettingsPage from './pages/Settings';
+import FeaturesPage from './pages/Features';
 import PricingPage from './pages/PricingPage';
-import BlogsPage from './pages/BlogsPage';
-import CommunityPage from './pages/CommunityPage';
-import ChatbotPage from './pages/ChatbotPage';
+import BlogsPage from './pages/Blogs';
+import CommunityPage from './pages/Community';
+import ChatbotPage from './pages/Chatbot';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// This component contains the main routing logic for the application.
 function AppContent() {
-  const { user } = useAuth();
+  // Get the current user from the AuthContext.
+  const { user: _user } = useAuth();
+  // State to check if the screen size is mobile.
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Function to check the window width and update the state.
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
 
+    // Initial check and event listener for window resizing.
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Cleanup function to remove the event listener.
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -100,6 +106,7 @@ function AppContent() {
   );
 }
 
+// The main App component that provides all the necessary contexts.
 function App() {
   return (
     <ThemeProvider>
