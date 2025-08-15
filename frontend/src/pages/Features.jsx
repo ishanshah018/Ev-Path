@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { 
-MapPin, Route, Battery, DollarSign, Smartphone, Shield, 
+MapPin, Route, Battery, IndianRupee, Smartphone, Shield, 
 Zap, TrendingUp, Users, Clock, Star, ArrowRight,
-CheckCircle, BarChart3, Navigation, Globe
+CheckCircle, BarChart3, Navigation, Globe, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,7 +21,7 @@ return <Navigate to="/dashboard" replace />;
 const mainFeatures = [
 {
     icon: <MapPin className="h-12 w-12 text-emerald-600" />,
-    title: "Smart Charging Station Finder",
+    title: "Charging Station Finder",
     description: "Find nearby charging stations with real-time availability, pricing, and plug compatibility. Our extensive database covers 50,000+ stations worldwide.",
     features: [
     "Real-time availability updates",
@@ -29,7 +29,10 @@ const mainFeatures = [
     "Plug compatibility checking",
     "User reviews and ratings",
     "Filter by charging speed"
-    ]
+    ],
+    image: "https://i.postimg.cc/MZYM2f0Z/cost-of-ev-charging-station.jpg",
+    imageAlt: "Clean illustration of white electric vehicle charging at EV station with green charging cable",
+    imagePosition: "right"
 },
 {
     icon: <Route className="h-12 w-12 text-emerald-600" />,
@@ -41,10 +44,13 @@ const mainFeatures = [
     "Traffic-aware routing",
     "Alternative route suggestions",
     "Weather impact analysis"
-    ]
+    ],
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    imageAlt: "Car dashboard with GPS navigation showing intelligent route planning",
+    imagePosition: "left"
 },
 {
-    icon: <Users className="h-12 w-12 text-emerald-600" />,
+    icon: <MessageCircle className="h-12 w-12 text-emerald-600" />,
     title: "AI-Powered Chatbot Assistant",
     description: "Get instant help with EV-related questions, charging recommendations, and personalized assistance 24/7.",
     features: [
@@ -53,10 +59,13 @@ const mainFeatures = [
     "Personalized recommendations",
     "Charging station guidance",
     "Trip planning assistance"
-    ]
+    ],
+    image: "https://i.postimg.cc/sDYR055K/robot-chat-bot-concept-illustration-vector.jpg",
+    imageAlt: "Robot chatbot concept illustration showing AI assistant for customer support",
+    imagePosition: "right"
 },
 {
-    icon: <DollarSign className="h-12 w-12 text-emerald-600" />,
+    icon: <IndianRupee className="h-12 w-12 text-emerald-600" />,
     title: "Cost Management & Savings",
     description: "Track charging costs, compare pricing options, and calculate your savings compared to traditional vehicles.",
     features: [
@@ -65,7 +74,10 @@ const mainFeatures = [
     "Charging network comparison",
     "Budget planning tools",
     "Tax incentive tracking"
-    ]
+    ],
+    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    imageAlt: "Financial dashboard showing cost savings and analytics",
+    imagePosition: "left"
 }
 ];
 
@@ -163,7 +175,7 @@ return (
 
         <div className="space-y-20">
         {mainFeatures.map((feature, index) => (
-            <div key={index} className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12`}>
+            <div key={index} className={`flex flex-col ${feature.imagePosition === 'left' ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12`}>
             <div className="flex-1">
                 <div className="mb-6">
                 {feature.icon}
@@ -184,15 +196,14 @@ return (
                 </ul>
             </div>
             <div className="flex-1">
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    {feature.icon}
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-400">
-                    Feature demonstration would go here
-                    </p>
-                </div>
+                <div className="relative rounded-xl overflow-hidden shadow-2xl">
+                <img 
+                    src={feature.image} 
+                    alt={feature.imageAlt}
+                    className="w-full h-80 object-cover"
+                    loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/20 to-transparent"></div>
                 </div>
             </div>
             </div>
@@ -274,11 +285,7 @@ return (
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {plans.map((plan, index) => (
-            <div key={index} className={`rounded-xl p-8 ${
-            plan.popular 
-                ? 'bg-emerald-600 text-white transform scale-105 shadow-xl' 
-                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg'
-            }`}>
+            <div key={index} className="rounded-xl p-8 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg border-2 border-transparent hover:border-emerald-500 transition-all duration-300">
             {plan.popular && (
                 <div className="text-center mb-4">
                 <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -289,29 +296,20 @@ return (
             <div className="text-center mb-6">
                 <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                 <div className="text-3xl font-bold mb-2">{plan.price}</div>
-                <p className={plan.popular ? 'text-emerald-100' : 'text-gray-600 dark:text-gray-400'}>
+                <p className="text-gray-600 dark:text-gray-400">
                 {plan.description}
                 </p>
             </div>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-3">
                 {plan.features.map((feature, featureIndex) => (
                 <li key={featureIndex} className="flex items-center space-x-3">
-                    <CheckCircle className={`h-5 w-5 ${
-                    plan.popular ? 'text-emerald-200' : 'text-emerald-600'
-                    } flex-shrink-0`} />
-                    <span className={plan.popular ? 'text-emerald-100' : 'text-gray-700 dark:text-gray-300'}>
+                    <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">
                     {feature}
                     </span>
                 </li>
                 ))}
             </ul>
-            <button className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-                plan.popular
-                ? 'bg-white text-emerald-600 hover:bg-gray-50'
-                : 'bg-emerald-600 text-white hover:bg-emerald-700'
-            }`}>
-                Get Started
-            </button>
             </div>
         ))}
         </div>

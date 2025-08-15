@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Moon, Sun, Zap } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,13 @@ const Header = () => {
 const { darkMode, toggleDarkMode } = useTheme();
 const { user, logout } = useAuth();
 const location = useLocation();
+const navigate = useNavigate();
+
+// Handle logout with redirect to home page
+const handleLogout = () => {
+    logout();
+    navigate('/');
+};
 
 const isActive = (path) => location.pathname === path;
 
@@ -121,7 +128,7 @@ return (
                 Hi, {user.name}
             </span>
             <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors tracking-wide"
             >
                 Logout

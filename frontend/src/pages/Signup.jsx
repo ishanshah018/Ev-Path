@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, Phone, MapPin } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 // This is the functional component for the Signup page.
@@ -8,8 +8,6 @@ const Signup = () => {
 // State for form inputs and UI state.
 const [name, setName] = useState('');
 const [email, setEmail] = useState('');
-const [phone, setPhone] = useState('');
-const [location, setLocation] = useState('');
 const [password, setPassword] = useState('');
 const [confirmPassword, setConfirmPassword] = useState('');
 const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +31,7 @@ setIsLoading(true);
 
 try {
     // Attempt to sign up the user with the provided data.
-    await signup(email, password, name, phone, location);
+    await signup(email, password, name, '', '');
     // Navigate to the onboarding page on a successful signup.
     navigate('/onboarding');
 } catch (error) {
@@ -106,49 +104,7 @@ return (
             </div>
         </div>
 
-        <div>
-            <label htmlFor="phone" className="sr-only">
-            Phone Number
-            </label>
-            <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Phone className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm"
-                placeholder="Phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-            />
-            </div>
-        </div>
 
-        <div>
-            <label htmlFor="location" className="sr-only">
-            Location
-            </label>
-            <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MapPin className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-                id="location"
-                name="location"
-                type="text"
-                autoComplete="address-level2"
-                required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm"
-                placeholder="City, State"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-            />
-            </div>
-        </div>
 
         <div>
             <label htmlFor="password" className="sr-only">

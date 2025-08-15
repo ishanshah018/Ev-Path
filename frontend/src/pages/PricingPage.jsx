@@ -68,10 +68,10 @@ return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {plans.map((plan, index) => (
-            <div key={index} className={`rounded-xl p-8 ${
+            <div key={index} className={`rounded-xl p-8 transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer group ${
             plan.popular 
-                ? 'bg-emerald-600 text-white transform scale-105 shadow-xl' 
-                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg'
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg border-2 border-emerald-500' 
+                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg border-2 border-transparent hover:border-emerald-500'
             }`}>
             {plan.popular && (
                 <div className="text-center mb-4">
@@ -87,7 +87,7 @@ return (
                 </div>
                 <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                 <div className="text-3xl font-bold mb-2">{plan.price}</div>
-                <p className={plan.popular ? 'text-emerald-100' : 'text-gray-600 dark:text-gray-400'}>
+                <p className="text-gray-600 dark:text-gray-400">
                 {plan.description}
                 </p>
             </div>
@@ -95,10 +95,8 @@ return (
             <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, featureIndex) => (
                 <li key={featureIndex} className="flex items-center space-x-3">
-                    <CheckCircle className={`h-5 w-5 ${
-                    plan.popular ? 'text-emerald-200' : 'text-emerald-600'
-                    } flex-shrink-0`} />
-                    <span className={plan.popular ? 'text-emerald-100' : 'text-gray-700 dark:text-gray-300'}>
+                    <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">
                     {feature}
                     </span>
                 </li>
@@ -107,11 +105,7 @@ return (
             
             <Link
                 to="/signup"
-                className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors text-center block ${
-                plan.popular
-                    ? 'bg-white text-emerald-600 hover:bg-gray-50'
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                }`}
+                className="w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 text-center block bg-emerald-600 text-white hover:bg-emerald-700 group-hover:bg-emerald-700 transform group-hover:scale-105"
             >
                 Get Started
             </Link>
@@ -121,24 +115,7 @@ return (
     </div>
     </section>
 
-    {/* CTA Section */}
-    <section className="py-20 bg-white dark:bg-gray-800">
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-        Ready to Start Your EV Journey?
-        </h2>
-        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-        Join thousands of EV owners who have already made the switch to smarter electric driving.
-        </p>
-        <Link
-        to="/signup"
-        className="inline-flex items-center px-8 py-4 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
-        >
-        Start Free Trial
-        <ArrowRight className="ml-2 h-5 w-5" />
-        </Link>
-    </div>
-    </section>
+
 </div>
 );
 };

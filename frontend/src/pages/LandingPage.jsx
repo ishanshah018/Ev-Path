@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Route, Battery, DollarSign, Zap, Leaf, Shield, Users } from 'lucide-react';
+import { ChevronRight, MapPin, Route, MessageCircle, DollarSign, Zap, Leaf, Shield, Users, IndianRupee } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 // This is the functional component for the Landing Page.
@@ -26,24 +26,18 @@ const features = [
     description: "Plan optimal routes with charging stops, considering your EV's range and charging needs."
 },
 {
-    icon: <Battery className="h-8 w-8 text-emerald-600" />,
-    title: "Battery Analytics",
-    description: "Monitor battery health, performance, and get predictions for optimal charging patterns."
+    icon: <MessageCircle className="h-8 w-8 text-emerald-600" />,
+    title: "ChatBot Assistant",
+    description: "Get instant answers to your EV questions with our AI-powered assistant available 24/7."
 },
 {
-    icon: <DollarSign className="h-8 w-8 text-emerald-600" />,
+    icon: <IndianRupee className="h-8 w-8 text-emerald-600" />,
     title: "Cost Estimator",
     description: "Calculate trip costs, compare charging options, and track your savings vs. gas vehicles."
 }
 ];
 
-// Define an array of objects for the key statistics.
-const stats = [
-{ value: "50,000+", label: "Charging Stations" },
-{ value: "25,000+", label: "Happy EV Owners" },
-{ value: "99.9%", label: "Uptime" },
-{ value: "24/7", label: "Support" }
-];
+
 
 // Render the component's JSX.
 return (
@@ -53,10 +47,10 @@ return (
     <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <div className="text-center">
-        <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight">
-            Your Journey to
+        <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white mb-6 tracking-normal">
+            Your Smartest EV Travel Companion –
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
-            {' '}Sustainable Driving
+            {' '}Anytime, Anywhere
             </span>
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto font-medium leading-relaxed">
@@ -97,15 +91,15 @@ return (
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {features.map((feature, index) => (
-            <div key={index} className="group">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+            <div key={index} className="group h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 h-full flex flex-col">
                 <div className="mb-6 transform group-hover:scale-110 transition-transform duration-300">
                 {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
                 {feature.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed font-medium flex-grow">
                 {feature.description}
                 </p>
             </div>
@@ -115,23 +109,7 @@ return (
     </div>
     </section>
 
-    {/* Stats Section */}
-    <section className="py-20 bg-emerald-600 dark:bg-emerald-800">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-        {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-white mb-2">
-                {stat.value}
-            </div>
-            <div className="text-emerald-100 text-sm md:text-base">
-                {stat.label}
-            </div>
-            </div>
-        ))}
-        </div>
-    </div>
-    </section>
+
 
     {/* Benefits Section */}
     <section className="py-20 bg-gray-50 dark:bg-gray-800">
@@ -169,13 +147,13 @@ return (
 
         <div className="text-center">
             <div className="mx-auto w-16 h-16 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mb-6">
-            <Shield className="h-8 w-8 text-emerald-600" />
+            <DollarSign className="h-8 w-8 text-emerald-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
-            Secure & Reliable
+            Cost Management & Savings
             </h3>
             <p className="text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
-            Your data is protected with enterprise-grade security, and our platform is built for reliability.
+            Track your spending, compare charging networks, and see how much you save compared to gas vehicles.
             </p>
         </div>
         </div>
