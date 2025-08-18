@@ -1,341 +1,322 @@
-import React, { useState } from 'react';
-import { MapPin, Filter, Search, Navigation, Zap, Clock, Star, DollarSign, Battery, Route } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { applyLeafletIconFix } from "../leaflet-fix";
+import MarkerClusterGroup from "@changey/react-leaflet-markercluster";
 
-// This is the functional component for the Map page.
-const Map = () => {
-// State to track the currently selected charging station.
-const [selectedStation, setSelectedStation] = useState(null);
-// State to manage the active filter type for stations.
-const [filterType, setFilterType] = useState('all');
-// State for the search query input.
-const [searchQuery, setSearchQuery] = useState('');
+applyLeafletIconFix();
 
-// Hardcoded data for charging stations.
-const chargingStations = [
-{
-    id: 1,
-    name: 'Green Energy Hub',
-    address: '123 Main St, Downtown',
-    distance: 2.1,
-    type: 'Fast Charge',
-    available: 3,
-    total: 4,
-    price: 8.5,
-    rating: 4.5,
-    amenities: ['Restaurant', 'WiFi', 'Restroom'],
-    plugTypes: ['CCS', 'CHAdeMO', 'Type 2'],
-    coords: { lat: 40.7128, lng: -74.0060 }
-},
-{
-    id: 2,
-    name: 'City Center Station',
-    address: '456 Oak Ave, Midtown',
-    distance: 3.5,
-    type: 'Standard',
-    available: 2,
-    total: 6,
-    price: 6.2,
-    rating: 4.2,
-    amenities: ['Shopping', 'Parking'],
-    plugTypes: ['Type 2', 'Type 1'],
-    coords: { lat: 40.7589, lng: -73.9851 }
-},
-{
-    id: 3,
-    name: 'Highway Plaza',
-    address: '789 Highway 101, Outskirts',
-    distance: 5.2,
-    type: 'Fast Charge',
-    available: 1,
-    total: 2,
-    price: 9.0,
-    rating: 4.0,
-    amenities: ['Gas Station', 'Convenience Store'],
-    plugTypes: ['CCS', 'CHAdeMO'],
-    coords: { lat: 40.6892, lng: -74.0445 }
-},
-{
-    id: 4,
-    name: 'Mall Parking Station',
-    address: '321 Shopping Blvd, Mall District',
-    distance: 4.8,
-    type: 'Standard',
-    available: 4,
-    total: 8,
-    price: 5.8,
-    rating: 4.3,
-    amenities: ['Mall', 'Food Court', 'WiFi'],
-    plugTypes: ['Type 2', 'Type 1'],
-    coords: { lat: 40.7505, lng: -73.9934 }
-},
-{
-    id: 5,
-    name: 'Airport Express',
-    address: '555 Terminal Rd, Airport',
-    distance: 12.5,
-    type: 'Fast Charge',
-    available: 6,
-    total: 10,
-    price: 10.2,
-    rating: 4.7,
-    amenities: ['Airport', 'Lounge', 'WiFi'],
-    plugTypes: ['CCS', 'CHAdeMO', 'Type 2'],
-    coords: { lat: 40.6413, lng: -73.7781 }
+const DEFAULT_CENTER = { lat: 23.0225, lon: 72.5714 }; // Ahmedabad
+
+function FlyTo({ center }) {
+const map = useMap();
+useEffect(() => {
+map.setView([center.lat, center.lon], 13, { animate: true });
+}, [center, map]);
+return null;
 }
-];
 
-// Filter the list of stations based on the search query and filter type.
-const filteredStations = chargingStations.filter(station => {
-const matchesSearch = station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        station.address.toLowerCase().includes(searchQuery.toLowerCase());
-const matchesFilter = filterType === 'all' || 
-                        (filterType === 'fast' && station.type === 'Fast Charge') ||
-                        (filterType === 'standard' && station.type === 'Standard') ||
-                        (filterType === 'available' && station.available > 0);
-return matchesSearch && matchesFilter;
-});
+export default function MapPage() {
+const [center, setCenter] = useState(DEFAULT_CENTER);
+const [stations, setStations] = useState([]);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState("");
+
+// filters
+const [distance, setDistance] = useState(10);
+const [q, setQ] = useState(""); // text filter (name/address/operator)
+const [connectors, setConnectors] = useState([]); // ["ccs","type 2","chademo","gb/t"]
+const [minKw, setMinKw] = useState("");
+const [maxKw, setMaxKw] = useState("");
+const [status, setStatus] = useState("");
+
+// NEW: place/city search input
+const [place, setPlace] = useState("");
+
+// debounce for filters
+const debounceRef = useRef(null);
+const scheduleFetch = (fn) => {
+if (debounceRef.current) clearTimeout(debounceRef.current);
+debounceRef.current = setTimeout(fn, 500);
+};
+
+// try to use browser location on load
+useEffect(() => {
+if (!navigator.geolocation) return;
+navigator.geolocation.getCurrentPosition(
+    (pos) => setCenter({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+    () => {},
+    { enableHighAccuracy: true, timeout: 8000 }
+);
+}, []);
+
+// Build backend URL (your Django API)
+const buildUrl = () => {
+const params = new URLSearchParams();
+params.set("lat", center.lat);
+params.set("lon", center.lon);
+params.set("distance", distance);
+params.set("maxresults", 200);
+if (q.trim()) params.set("q", q.trim());
+if (connectors.length) params.set("connectors", connectors.join(","));
+if (minKw !== "") params.set("min_kw", minKw);
+if (maxKw !== "") params.set("max_kw", maxKw);
+if (status) params.set("status", status);
+return `http://127.0.0.1:8000/api/ev-stations/?${params.toString()}`;
+};
+
+const fetchStations = async () => {
+setLoading(true);
+setError("");
+try {
+    const res = await fetch(buildUrl());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    setStations(data);
+} catch (e) {
+    console.error(e);
+    setError("Failed to load stations.");
+} finally {
+    setLoading(false);
+}
+};
+
+// fetch when center changes (e.g., after geocoding)
+useEffect(() => {
+fetchStations();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [center]);
+
+// fetch when filters change (debounced)
+useEffect(() => {
+scheduleFetch(fetchStations);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [q, connectors, minKw, maxKw, status, distance]);
+
+const markers = useMemo(() => stations.filter((s) => s.lat && s.lon), [stations]);
+
+const toggleConnector = (name) => {
+const n = name.toLowerCase();
+setConnectors((prev) => (prev.includes(n) ? prev.filter((x) => x !== n) : [...prev, n]));
+};
+
+// NEW: geocode a place/city -> setCenter()
+const geocodeAndCenter = async () => {
+const query = place.trim();
+if (!query) return;
+setLoading(true);
+setError("");
+try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&countrycodes=in&q=${encodeURIComponent(
+    query
+    )}`;
+    const resp = await fetch(url, {
+    headers: {
+        // Good practice: identify your app (Nominatim usage policy)
+        "User-Agent": "ev-path-demo/1.0 (contact: you@example.com)",
+    },
+    });
+    const results = await resp.json();
+    if (!Array.isArray(results) || results.length === 0) {
+    setError("Place not found. Try a different name.");
+    return;
+    }
+    const lat = parseFloat(results[0].lat);
+    const lon = parseFloat(results[0].lon);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    setCenter({ lat, lon }); // triggers fetch via useEffect
+    } else {
+    setError("Geocoding failed for this place.");
+    }
+} catch (e) {
+    console.error(e);
+    setError("Geocoding failed. Check your internet connection.");
+} finally {
+    setLoading(false);
+}
+};
 
 return (
-<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <div className="flex h-screen">
-    {/* Sidebar for station list and controls */}
-    <div className="w-full md:w-96 bg-white dark:bg-gray-800 shadow-lg flex flex-col">
-        {/* Header section with search and filters */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Charging Stations
-        </h1>
-        
-        {/* Search input */}
-        <div className="relative mb-4">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <input
-            type="text"
-            placeholder="Search stations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
+<div className="grid grid-cols-12 gap-4 p-4">
+    {/* Left controls + list */}
+    <div className="col-span-4 overflow-y-auto h-[90vh] space-y-3">
+    <div className="rounded-xl border p-3 space-y-3">
+        <div className="font-semibold text-lg">Find stations</div>
+
+        {/* NEW: Search place/city to recenter map */}
+        <label className="block text-sm">Search place/city</label>
+        <div className="flex gap-2">
+        <input
+            value={place}
+            onChange={(e) => setPlace(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && geocodeAndCenter()}
+            className="border rounded px-3 py-2 w-full"
+            placeholder="e.g., Delhi, Mumbai, Navrangpura"
+        />
+        <button onClick={geocodeAndCenter} className="px-3 py-2 rounded border">
+            Go
+        </button>
         </div>
 
-        {/* Filter buttons */}
+        {/* Text filter (applies within current radius) */}
+        <label className="block text-sm mt-3">Filter results (name/address/operator)</label>
+        <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        className="border rounded px-3 py-2 w-full"
+        placeholder="e.g., Tata Power or Taj"
+        />
+
+        {/* Distance + geolocation */}
+        <div className="flex items-center gap-2">
+        <label className="text-sm">Radius (km)</label>
+        <input
+            type="number"
+            min={1}
+            max={50}
+            value={distance}
+            onChange={(e) => setDistance(Number(e.target.value))}
+            className="border rounded px-3 py-2 w-28"
+        />
+        <button
+            onClick={() =>
+            navigator.geolocation?.getCurrentPosition((pos) =>
+                setCenter({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+            )
+            }
+            className="px-3 py-2 rounded border"
+        >
+            Use my location
+        </button>
+        </div>
+
+        {/* Connectors */}
+        <div>
+        <div className="text-sm mb-1">Connectors</div>
         <div className="flex flex-wrap gap-2">
+            {["CCS", "Type 2", "CHAdeMO", "GB/T"].map((lbl) => (
             <button
-            onClick={() => setFilterType('all')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                filterType === 'all'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-            >
-            All
-            </button>
-            <button
-            onClick={() => setFilterType('fast')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                filterType === 'fast'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-            >
-            Fast Charge
-            </button>
-            <button
-            onClick={() => setFilterType('standard')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                filterType === 'standard'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-            >
-            Standard
-            </button>
-            <button
-            onClick={() => setFilterType('available')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                filterType === 'available'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-            >
-            Available
-            </button>
-        </div>
-        </div>
-
-        {/* List of filtered charging stations */}
-        <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-4">
-            {filteredStations.map((station) => (
-            <div
-                key={station.id}
-                className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
-                selectedStation?.id === station.id
-                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-700'
+                key={lbl}
+                onClick={() => toggleConnector(lbl)}
+                className={`px-2 py-1 rounded border text-sm ${
+                connectors.includes(lbl.toLowerCase()) ? "bg-gray-200" : ""
                 }`}
-                onClick={() => setSelectedStation(station)}
             >
-                <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{station.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{station.address}</p>
-                </div>
-                <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{station.rating}</span>
-                </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                    <Navigation className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{station.distance} km</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">₹{station.price}/kWh</span>
-                    </div>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    station.type === 'Fast Charge'
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-                }`}>
-                    {station.type}
-                </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1">
-                    <span className={`inline-block w-2 h-2 rounded-full ${
-                    station.available > 0 ? 'bg-green-500' : 'bg-red-500'
-                    }`} />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {station.available}/{station.total} available
-                    </span>
-                </div>
-                <div className="flex space-x-1">
-                    {station.plugTypes.map((plugType) => (
-                    <span
-                        key={plugType}
-                        className="px-2 py-1 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs"
-                    >
-                        {plugType}
-                    </span>
-                    ))}
-                </div>
-                </div>
-            </div>
+                {lbl}
+            </button>
             ))}
         </div>
         </div>
+
+        {/* Power filters */}
+        <div className="grid grid-cols-2 gap-2">
+        <div>
+            <label className="text-sm">Min kW</label>
+            <input
+            type="number"
+            min={0}
+            value={minKw}
+            onChange={(e) => setMinKw(e.target.value)}
+            className="border rounded px-3 py-2 w-full"
+            />
+        </div>
+        <div>
+            <label className="text-sm">Max kW</label>
+            <input
+            type="number"
+            min={0}
+            value={maxKw}
+            onChange={(e) => setMaxKw(e.target.value)}
+            className="border rounded px-3 py-2 w-full"
+            />
+        </div>
+        </div>
+
+        {/* Status */}
+        <div>
+        <label className="text-sm">Status</label>
+        <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="border rounded px-3 py-2 w-full"
+        >
+            <option value="">Any</option>
+            <option value="Operational">Operational</option>
+            <option value="Planned">Planned</option>
+            <option value="Temporarily Unavailable">Temporarily Unavailable</option>
+        </select>
+        </div>
     </div>
 
-    {/* Map Area */}
-    <div className="flex-1 relative bg-gray-200 dark:bg-gray-700">
-        {/* Map Placeholder */}
-        <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-            <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-            Interactive Map
-            </h2>
-            <p className="text-gray-500 dark:text-gray-500">
-            Map integration with Google Maps or Mapbox would go here
-            </p>
-        </div>
-        </div>
+    <div className="text-sm opacity-70">
+        {loading ? "Loading…" : `${stations.length} stations`}
+        {error && <span className="text-red-500 ml-2">{error}</span>}
+    </div>
 
-        {/* Map Controls */}
-        <div className="absolute top-4 right-4 space-y-2">
-        <button className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
-            <Navigation className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+    {stations.map((s) => (
+        <div key={s.id} className="rounded-xl p-3 border shadow-sm">
+        <div className="font-semibold">{s.name || "Unnamed Station"}</div>
+        <div className="text-sm opacity-80">
+            {s.address}
+            {s.town ? `, ${s.town}` : ""}
+        </div>
+        <div className="text-sm mt-1">
+            Status: {s.status || "Unknown"}
+            {s.distance
+            ? ` · ~${s.distance.toFixed ? s.distance.toFixed(1) : s.distance} km`
+            : ""}
+        </div>
+        <div className="text-sm">Cost: {s.usage_cost || "—"}</div>
+        <div className="flex flex-wrap gap-2 text-xs mt-2">
+            {(s.connections || []).map((c, i) => (
+            <span key={i} className="px-2 py-1 rounded border">
+                {(c.type || "Connector")} · {c.power_kw ? `${c.power_kw} kW` : "—"}
+            </span>
+            ))}
+        </div>
+        <button
+            className="mt-2 text-sm underline"
+            onClick={() => setCenter({ lat: s.lat, lon: s.lon })}
+        >
+            Center on map
         </button>
-        <button className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
-            <Filter className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        </button>
         </div>
+    ))}
+    </div>
 
-        {/* Station Details Popup */}
-        {selectedStation && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-auto md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
-            <div className="p-6">
-            <div className="flex items-start justify-between mb-4">
-                <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {selectedStation.name}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{selectedStation.address}</p>
-                </div>
-                <button
-                onClick={() => setSelectedStation(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                ×
-                </button>
-            </div>
+    {/* Map + clustering */}
+    <div className="col-span-8">
+    <MapContainer
+        center={[center.lat, center.lon]}
+        zoom={12}
+        style={{ height: "90vh", width: "100%", borderRadius: 16 }}
+    >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <FlyTo center={center} />
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <Navigation className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedStation.distance} km</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Distance</p>
-                </div>
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <DollarSign className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                <p className="text-sm font-medium text-gray-900 dark:text-white">₹{selectedStation.price}/kWh</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Price</p>
-                </div>
-            </div>
-
-            <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Availability</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {selectedStation.available}/{selectedStation.total} available
-                </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                <div
-                    className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(selectedStation.available / selectedStation.total) * 100}%` }}
-                />
-                </div>
-            </div>
-
-            <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amenities</p>
-                <div className="flex flex-wrap gap-1">
-                {selectedStation.amenities.map((amenity) => (
-                    <span
-                    key={amenity}
-                    className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded text-xs"
-                    >
-                    {amenity}
-                    </span>
+        <MarkerClusterGroup chunkedLoading>
+        {markers.map((s) => (
+            <Marker key={s.id} position={[s.lat, s.lon]}>
+            <Popup>
+                <b>{s.name || "Station"}</b>
+                <br />
+                {s.address}
+                {s.town ? `, ${s.town}` : ""}
+                <br />
+                {s.status ? `Status: ${s.status}` : ""}
+                <div style={{ marginTop: 6 }}>
+                {(s.connections || []).map((c, i) => (
+                    <div key={i}>
+                    {c.type || "Conn"} · {c.power_kw ? `${c.power_kw} kW` : "—"}
+                    </div>
                 ))}
                 </div>
-            </div>
-
-            <div className="flex space-x-2">
-                <button className="flex-1 py-2 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
-                <Route className="h-4 w-4 inline mr-1" />
-                Navigate
-                </button>
-                <button className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium">
-                <Battery className="h-4 w-4 inline mr-1" />
-                Reserve
-                </button>
-            </div>
-            </div>
-        </div>
-        )}
-    </div>
+            </Popup>
+            </Marker>
+        ))}
+        </MarkerClusterGroup>
+    </MapContainer>
     </div>
 </div>
 );
-};
-
-export default Map;
+}
