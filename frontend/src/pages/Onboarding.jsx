@@ -88,7 +88,7 @@ switch (step) {
 };
 
 return (
-<div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+<div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
     <div className="max-w-2xl mx-auto">
     <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -107,7 +107,7 @@ return (
             <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
                 currentStep >= step
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                 }`}
             >
@@ -117,7 +117,7 @@ return (
                 <div
                 className={`w-20 h-1 mx-4 ${
                     currentStep > step
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500'
+                    ? 'bg-blue-600'
                     : 'bg-gray-200 dark:bg-gray-700'
                 }`}
                 />
@@ -148,7 +148,7 @@ return (
                     : 'border-gray-200 dark:border-gray-600 hover:border-emerald-300 dark:hover:border-emerald-500'
                 }`}
             >
-                <Bike className="h-12 w-12 text-orange-600 mx-auto mb-4" />
+                <Bike className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Two Wheeler
                 </h3>
@@ -165,7 +165,7 @@ return (
                     : 'border-gray-200 dark:border-gray-600 hover:border-emerald-300 dark:hover:border-emerald-500'
                 }`}
             >
-                <Car className="h-12 w-12 text-orange-600 mx-auto mb-4" />
+                <Car className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Four Wheeler
                 </h3>
@@ -255,7 +255,7 @@ return (
             {/* Battery Visualization */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
                 <div className="flex items-center space-x-4">
-                <Battery className="h-8 w-8 text-orange-600" />
+                <Battery className="h-8 w-8 text-blue-600" />
                 <div className="flex-1">
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                     <span>Battery Capacity</span>
@@ -289,7 +289,7 @@ return (
             <button
             onClick={handleNext}
             disabled={!isStepComplete(currentStep)}
-            className="flex items-center px-6 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
             Next
             <ChevronRight className="h-5 w-5 ml-2" />
@@ -298,7 +298,7 @@ return (
             <button
             onClick={handleSubmit}
             disabled={!isStepComplete(3)}
-            className="flex items-center px-6 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
             Complete Setup
             <Check className="h-5 w-5 ml-2" />

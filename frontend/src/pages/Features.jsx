@@ -94,7 +94,7 @@ const additionalFeatures = [
     description: "Comprehensive insights into your driving patterns and energy consumption."
 },
 {
-    icon: <Navigation className="h-8 w-8 text-orange-600" />,
+    icon: <Navigation className="h-8 w-8 text-blue-600" />,
     title: "Offline Maps",
     description: "Download maps for offline use when you're in areas with poor connectivity."
 },

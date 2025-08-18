@@ -14,7 +14,7 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 // Handle logout with redirect to home page
 const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/', { replace: true });
     setIsMobileMenuOpen(false); // Close mobile menu on logout
 };
 

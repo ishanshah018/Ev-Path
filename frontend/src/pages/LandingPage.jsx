@@ -16,22 +16,22 @@ return <Navigate to="/dashboard" replace />;
 // Define an array of objects for the main features.
 const features = [
 {
-    icon: <MapPin className="h-8 w-8 text-orange-600" />,
+    icon: <MapPin className="h-8 w-8 text-green-600" />,
     title: "Charging Station Finder",
     description: "Find nearby charging stations with real-time availability, pricing, and plug compatibility."
 },
 {
-    icon: <Route className="h-8 w-8 text-orange-600" />,
+    icon: <Route className="h-8 w-8 text-green-600" />,
     title: "Smart Route Planner",
     description: "Plan optimal routes with charging stops, considering your EV's range and charging needs."
 },
 {
-    icon: <MessageCircle className="h-8 w-8 text-orange-600" />,
+    icon: <MessageCircle className="h-8 w-8 text-green-600" />,
     title: "ChatBot Assistant",
     description: "Get instant answers to your EV questions with our AI-powered assistant available 24/7."
 },
 {
-    icon: <IndianRupee className="h-8 w-8 text-orange-600" />,
+    icon: <IndianRupee className="h-8 w-8 text-green-600" />,
     title: "Cost Estimator",
     description: "Calculate trip costs, compare charging options, and track your savings vs. gas vehicles."
 }
@@ -43,31 +43,31 @@ const features = [
 return (
 <div className="min-h-screen">
     {/* Hero Section */}
-    <section className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <section className="relative bg-gray-50 dark:bg-gray-900 overflow-hidden">
     <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white mb-6 tracking-normal">
             Your Smartest EV Travel Companion –
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-700">
             {' '}Anytime, Anywhere
             </span>
         </h1>
-        <p className="text-xl text-amber-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto font-medium leading-relaxed">
+        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto font-medium leading-relaxed">
             Discover charging stations, plan smart routes, and optimize your electric vehicle experience 
             with EvPath - the comprehensive EV companion for modern drivers.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
             to={user ? "/dashboard" : "/pricing"}
-            className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl tracking-wide"
+            className="group px-8 py-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl tracking-wide"
             >
             {user ? "Go to Dashboard" : "Get Started"}
             <ChevronRight className="inline-block ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
             to="/features"
-            className="px-8 py-4 bg-white/80 dark:bg-gray-800 text-amber-800 dark:text-white rounded-lg font-semibold hover:bg-orange-50 dark:hover:bg-gray-700 transition-all duration-200 border border-orange-200 dark:border-gray-600 shadow-lg hover:shadow-xl tracking-wide"
+            className="px-8 py-4 bg-white/80 dark:bg-gray-800 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 border border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl tracking-wide"
             >
             Learn More
             </Link>
@@ -77,13 +77,13 @@ return (
     </section>
 
     {/* Features Section */}
-    <section className="py-20 bg-cream-50 dark:bg-gray-900">
+    <section className="py-20 bg-white dark:bg-gray-900">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
+    <div className="text-center mb-16">
+    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
             Everything You Need for EV Life
         </h2>
-        <p className="text-xl text-amber-700 dark:text-gray-300 max-w-3xl mx-auto font-medium leading-relaxed">
+        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-medium leading-relaxed">
             From finding the perfect charging station to optimizing your battery performance, 
             EvPath provides all the tools you need for seamless electric driving.
         </p>
@@ -92,14 +92,14 @@ return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {features.map((feature, index) => (
             <div key={index} className="group h-full">
-            <div className="bg-white/80 dark:bg-gray-800 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-orange-100 dark:border-gray-700 h-full flex flex-col backdrop-blur-sm">
+            <div className="bg-white/80 dark:bg-gray-800 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200 dark:border-gray-700 h-full flex flex-col backdrop-blur-sm">
                 <div className="mb-6 transform group-hover:scale-110 transition-transform duration-300">
                 {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
                 {feature.title}
                 </h3>
-                <p className="text-amber-700 dark:text-gray-300 leading-relaxed font-medium flex-grow">
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed font-medium flex-grow">
                 {feature.description}
                 </p>
             </div>
@@ -112,7 +112,7 @@ return (
 
 
     {/* Benefits Section */}
-    <section className="py-20 bg-gradient-to-br from-orange-50 to-amber-50 dark:bg-gray-800">
+    <section className="py-20 bg-gray-100 dark:bg-gray-800">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
@@ -122,37 +122,37 @@ return (
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-6">
-            <Zap className="h-8 w-8 text-orange-600" />
+            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-6">
+            <Zap className="h-8 w-8 text-green-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
             Lightning Fast
             </h3>
-            <p className="text-amber-700 dark:text-gray-300 font-medium leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
             Real-time data updates ensure you always have the most current information about charging stations.
             </p>
         </div>
 
         <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-6">
-            <Leaf className="h-8 w-8 text-orange-600" />
+            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-6">
+            <Leaf className="h-8 w-8 text-green-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
             Eco-Friendly
             </h3>
-            <p className="text-amber-700 dark:text-gray-300 font-medium leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
             Optimize your routes to minimize energy consumption and maximize your environmental impact.
             </p>
         </div>
 
         <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-6">
-            <DollarSign className="h-8 w-8 text-orange-600" />
+            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-6">
+            <DollarSign className="h-8 w-8 text-green-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
             Cost Management & Savings
             </h3>
-            <p className="text-amber-700 dark:text-gray-300 font-medium leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
             Track your spending, compare charging networks, and see how much you save compared to gas vehicles.
             </p>
         </div>
@@ -161,18 +161,18 @@ return (
     </section>
 
     {/* CTA Section */}
-    <section className="py-20 bg-cream-50 dark:bg-gray-900">
+    <section className="py-20 bg-white dark:bg-gray-900">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
         Ready to Start Your EV Journey?
         </h2>
-        <p className="text-xl text-amber-700 dark:text-gray-300 mb-8 font-medium leading-relaxed">
+        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 font-medium leading-relaxed">
         Join thousands of EV owners who trust EvPath for their daily charging and route planning needs.
         </p>
-        <Link
-        to={user ? "/dashboard" : "/pricing"}
-        className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl tracking-wide"
-        >
+    <Link
+    to={user ? "/dashboard" : "/pricing"}
+    className="inline-flex items-center px-8 py-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl tracking-wide"
+    >
         {user ? "Go to Dashboard" : "Get Started for Free"}
         <ChevronRight className="ml-2 h-5 w-5" />
         </Link>
@@ -185,7 +185,7 @@ return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-            <Zap className="h-8 w-8 text-orange-600" />
+            <Zap className="h-8 w-8 text-green-600" />
             <span className="text-xl font-bold tracking-tight">EvPath</span>
             </div>
             <p className="text-gray-400 mb-4 font-medium leading-relaxed">
