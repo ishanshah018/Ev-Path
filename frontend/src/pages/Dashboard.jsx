@@ -56,20 +56,20 @@ return 'bg-red-100 dark:bg-red-900/20';
 // If the user has not completed onboarding, show a setup screen.
 if (!user?.hasCompletedOnboarding) {
 return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:bg-gray-900 flex items-center justify-center">
     <div className="text-center">
         <div className="mb-8">
-        <Car className="h-16 w-16 text-emerald-600 mx-auto mb-4" />
+        <Car className="h-16 w-16 text-orange-600 mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Complete Your Setup
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-amber-700 dark:text-gray-400">
             Add your first EV to get started with EvPath
         </p>
         </div>
         <Link
         to="/onboarding"
-        className="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors"
         >
         <Plus className="h-5 w-5 mr-2" />
         Add Your EV
@@ -81,7 +81,7 @@ return (
 
 // Main dashboard layout.
 return (
-<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:bg-gray-900">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     {/* Header Section */}
     <div className="mb-8">
@@ -90,14 +90,14 @@ return (
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}, {user?.name}!
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1 font-medium">
+            <p className="text-amber-700 dark:text-gray-400 mt-1 font-medium">
             {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
         </div>
         <div className="flex items-center space-x-4">
             <Link
             to="/my-evs"
-            className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600"
+            className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors border border-orange-100 dark:border-gray-600"
             >
             <Plus className="h-4 w-4 mr-2" />
             Add EV
@@ -108,37 +108,37 @@ return (
 
     {/* Quick Stats Section */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700 p-6">
         <div className="flex items-center">
             <div className="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-            <Car className="h-6 w-6 text-emerald-600" />
+            <Car className="h-6 w-6 text-orange-600" />
             </div>
             <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total EVs</p>
+            <p className="text-sm font-medium text-amber-700 dark:text-gray-400">Total EVs</p>
             <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">{evs.length}</p>
             </div>
         </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700 p-6">
         <div className="flex items-center">
             <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
             <Route className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Trips</p>
+            <p className="text-sm font-medium text-amber-700 dark:text-gray-400">Total Trips</p>
             <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">{recentTrips.length}</p>
             </div>
         </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700 p-6">
         <div className="flex items-center">
             <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
             <Zap className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Savings</p>
+            <p className="text-sm font-medium text-amber-700 dark:text-gray-400">Monthly Savings</p>
             <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">₹2,450</p>
             </div>
         </div>
@@ -150,18 +150,18 @@ return (
         <div className="lg:col-span-2 space-y-8">
         {/* Current EV Status */}
         {defaultEV && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700 overflow-hidden">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">
                     {defaultEV.brand} {defaultEV.model}
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400 font-medium">Primary Vehicle</p>
+                    <p className="text-amber-700 dark:text-gray-400 font-medium">Primary Vehicle</p>
                 </div>
                 <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Default</span>
+                    <span className="text-sm text-amber-700 dark:text-gray-400">Default</span>
                 </div>
                 </div>
 
@@ -185,7 +185,7 @@ return (
                     </div>
                     <Battery className="absolute -right-8 top-0 h-4 w-4 text-gray-400" />
                     </div>
-                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex justify-between text-sm text-amber-700 dark:text-gray-400">
                     <span>0%</span>
                     <span className="font-medium">Range: {Math.round(defaultEV.range * (defaultEV.currentCharge / 100))} km</span>
                     <span>100%</span>
@@ -207,7 +207,7 @@ return (
                         <p className={`text-sm font-medium ${batteryHealthColor(defaultEV.batteryHealth)}`}>
                             {defaultEV.batteryHealth >= 90 ? 'Excellent' : defaultEV.batteryHealth >= 70 ? 'Good' : 'Fair'}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-amber-700 dark:text-gray-400">
                             {defaultEV.batteryHealth >= 90 ? 'Your battery is in excellent condition' :
                             defaultEV.batteryHealth >= 70 ? 'Battery performance is good' :
                             'Consider battery maintenance'}
@@ -222,13 +222,13 @@ return (
         )}
 
         {/* Recent Trips Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700">
+            <div className="p-6 border-b border-orange-100 dark:border-gray-700">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Trips</h2>
                 <Link
                 to="/trips"
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center"
+                className="text-orange-600 hover:text-emerald-700 font-medium text-sm flex items-center"
                 >
                 View All
                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -241,18 +241,18 @@ return (
                 <div key={trip.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center space-x-4">
                     <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-                        <MapPin className="h-5 w-5 text-emerald-600" />
+                        <MapPin className="h-5 w-5 text-orange-600" />
                     </div>
                     <div>
                         <h3 className="font-medium text-gray-900 dark:text-white">{trip.destination}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-amber-700 dark:text-gray-400">
                         {trip.distance} km • {trip.efficiency} km/kWh
                         </p>
                     </div>
                     </div>
                     <div className="text-right">
                     <p className="font-medium text-gray-900 dark:text-white">₹{trip.cost}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{trip.date}</p>
+                    <p className="text-sm text-amber-700 dark:text-gray-400">{trip.date}</p>
                     </div>
                 </div>
                 ))}
@@ -264,13 +264,13 @@ return (
         {/* Sidebar */}
         <div className="space-y-8">
         {/* Nearby Charging Stations */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700">
+            <div className="p-6 border-b border-orange-100 dark:border-gray-700">
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Nearby Stations</h2>
                 <Link
                 to="/map"
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center"
+                className="text-orange-600 hover:text-emerald-700 font-medium text-sm flex items-center"
                 >
                 View Map
                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -280,12 +280,12 @@ return (
             <div className="p-6">
             <div className="space-y-4">
                 {nearbyStations.map((station) => (
-                <div key={station.id} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div key={station.id} className="p-4 border border-orange-100 dark:border-gray-600 rounded-lg hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium text-gray-900 dark:text-white">{station.name}</h3>
-                    <span className="text-sm text-emerald-600 font-medium">₹{station.price}/kWh</span>
+                    <span className="text-sm text-orange-600 font-medium">₹{station.price}/kWh</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between text-sm text-amber-700 dark:text-gray-400">
                     <span>{station.distance} km away</span>
                     <span className="flex items-center">
                         <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
@@ -310,7 +310,7 @@ return (
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-orange-100 dark:border-gray-700">
             <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
             <div className="space-y-3">
@@ -318,7 +318,7 @@ return (
                 to="/map"
                 className="flex items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
                 >
-                <MapPin className="h-5 w-5 text-emerald-600 mr-3" />
+                <MapPin className="h-5 w-5 text-orange-600 mr-3" />
                 <span className="text-emerald-700 dark:text-emerald-400 font-medium">Find Charging Stations</span>
                 </Link>
                 <Link
