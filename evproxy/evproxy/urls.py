@@ -18,9 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from ocm.views import ev_stations
+from ocm.views import route_chargers
+
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/ev-stations/", ev_stations),
+    path("api/route-chargers/", route_chargers),
+
 ]
