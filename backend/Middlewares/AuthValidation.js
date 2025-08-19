@@ -13,6 +13,7 @@ const signupValidation = (req, res, next) => {
     }
     next();
 }
+
 const loginValidation = (req, res, next) => {
     const schema = Joi.object({
         email: Joi.string().email().required(),
@@ -25,7 +26,22 @@ const loginValidation = (req, res, next) => {
     }
     next();
 }
+
+const changePasswordValidation = (req, res, next) => {
+    const schema = Joi.object({
+        currentPassword: Joi.string().required(),
+        newPassword: Joi.string().min(4).max(100).required()
+    });
+    const { error } = schema.validate(req.body);
+    if (error) {
+        return res.status(400)
+            .json({ message: "Bad request", error })
+    }
+    next();
+}
+
 module.exports = {
     signupValidation,
-    loginValidation
+    loginValidation,
+    changePasswordValidation
 }

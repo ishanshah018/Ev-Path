@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Trash2, Star, Battery, Car, Bike, Settings, TrendingUp, Activity } from 'lucide-react';
+import { Plus, Edit3, Trash2, Star, Battery, Car, Bike, Activity } from 'lucide-react';
 import { useEV } from '../contexts/EVContext';
+import SuccessModal from '../components/SuccessModal';
 
 // This is the functional component for the Manage EVs page.
 const ManageEV = () => {
 // Destructure functions and state from the EV context.
-const { evs, addEV, updateEV, deleteEV, setDefaultEV } = useEV();
+const { evs, loading, addEV, updateEV, deleteEV, setDefaultEV } = useEV();
 // State to control the visibility of the add/edit form.
 const [showAddForm, setShowAddForm] = useState(false);
 // State to hold the EV currently being edited.
@@ -16,9 +17,12 @@ type: '4W',
 brand: '',
 model: '',
 batteryCapacity: 0,
-range: 0,
+currentCharge: 0,
+fullRange: 0,
 isDefault: false
 });
+// State for success modal
+const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
 // Hardcoded data for EV brands based on vehicle type.
 const evBrands = {
@@ -50,7 +54,8 @@ setFormData({
     brand: '',
     model: '',
     batteryCapacity: 0,
-    range: 0,
+    currentCharge: 0,
+    fullRange: 0,
     isDefault: false
 });
 setEditingEV(null);
@@ -58,14 +63,21 @@ setShowAddForm(false);
 };
 
 // Function to handle form submission for both adding and editing.
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
 e.preventDefault();
-if (editingEV) {
-    updateEV(editingEV.id, formData);
-} else {
-    addEV(formData);
+try {
+    if (editingEV) {
+        await updateEV(editingEV._id, formData);
+        setSuccessModal({ isOpen: true, message: 'EV updated successfully!' });
+    } else {
+        await addEV(formData);
+        setSuccessModal({ isOpen: true, message: 'EV added successfully!' });
+    }
+    resetForm();
+} catch (error) {
+    console.error('Error saving EV:', error);
+    setSuccessModal({ isOpen: true, message: 'Error saving EV. Please try again.' });
 }
-resetForm();
 };
 
 // Function to populate the form with data for editing a specific EV.
@@ -75,7 +87,8 @@ setFormData({
     brand: ev.brand,
     model: ev.model,
     batteryCapacity: ev.batteryCapacity,
-    range: ev.range,
+    currentCharge: ev.currentCharge,
+    fullRange: ev.fullRange,
     isDefault: ev.isDefault
 });
 setEditingEV(ev);
@@ -83,30 +96,49 @@ setShowAddForm(true);
 };
 
 // Function to handle deleting an EV.
-const handleDelete = (id) => {
-// Note: The original code used `confirm()`, which is not available in this environment.
-// In a real application, you'd use a custom modal for confirmation.
+const handleDelete = async (id) => {
 if (window.confirm('Are you sure you want to delete this EV?')) {
-    deleteEV(id);
+    try {
+        await deleteEV(id);
+        setSuccessModal({ isOpen: true, message: 'EV deleted successfully!' });
+    } catch (error) {
+        console.error('Error deleting EV:', error);
+        setSuccessModal({ isOpen: true, message: 'Error deleting EV. Please try again.' });
+    }
 }
 };
 
 // Function to set an EV as the default.
-const handleSetDefault = (id) => {
-setDefaultEV(id);
+const handleSetDefault = async (id) => {
+try {
+    await setDefaultEV(id);
+    setSuccessModal({ isOpen: true, message: 'Default EV updated successfully!' });
+} catch (error) {
+    console.error('Error setting default EV:', error);
+    setSuccessModal({ isOpen: true, message: 'Error setting default EV. Please try again.' });
+}
 };
 
-// Functions to determine color classes for battery health display.
-const batteryHealthColor = (health) => {
-if (health >= 90) return 'text-green-600';
-if (health >= 70) return 'text-yellow-600';
+// Functions to determine color classes for battery condition display.
+const batteryHealthColor = (percentage) => {
+if (percentage >= 80) return 'text-green-600';
+if (percentage >= 50) return 'text-yellow-600';
+if (percentage >= 20) return 'text-orange-600';
 return 'text-red-600';
 };
 
-const batteryHealthBg = (health) => {
-if (health >= 90) return 'bg-green-100 dark:bg-green-900/20';
-if (health >= 70) return 'bg-yellow-100 dark:bg-yellow-900/20';
+const batteryHealthBg = (percentage) => {
+if (percentage >= 80) return 'bg-green-100 dark:bg-green-900/20';
+if (percentage >= 50) return 'bg-yellow-100 dark:bg-yellow-900/20';
+if (percentage >= 20) return 'bg-orange-100 dark:bg-orange-900/20';
 return 'bg-red-100 dark:bg-red-900/20';
+};
+
+const batteryBarColor = (percentage) => {
+if (percentage >= 80) return 'bg-gradient-to-r from-green-500 to-green-600';
+if (percentage >= 50) return 'bg-gradient-to-r from-yellow-500 to-yellow-600';
+if (percentage >= 20) return 'bg-gradient-to-r from-orange-500 to-orange-600';
+return 'bg-gradient-to-r from-red-500 to-red-600';
 };
 
 return (
@@ -230,25 +262,74 @@ return (
                     value={formData.batteryCapacity || ''}
                     onChange={(e) => setFormData({ ...formData, batteryCapacity: Number(e.target.value) })}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="e.g., 40"
+                    placeholder="e.g., 60"
                     required
                 />
+                <p className="text-xs text-gray-500 mt-1">Total energy your battery can store</p>
                 </div>
 
-                {/* Range Input */}
+                {/* Current Charge Input */}
                 <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Range (km)
+                    Current Charge (kWh)
                 </label>
                 <input
                     type="number"
-                    value={formData.range || ''}
-                    onChange={(e) => setFormData({ ...formData, range: Number(e.target.value) })}
+                    value={formData.currentCharge || ''}
+                    onChange={(e) => setFormData({ ...formData, currentCharge: Number(e.target.value) })}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="e.g., 300"
+                    placeholder="e.g., 48"
                     required
                 />
+                <p className="text-xs text-gray-500 mt-1">Energy left in your battery</p>
                 </div>
+
+                {/* Full Range Input */}
+                <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Full Range (km)
+                </label>
+                <input
+                    type="number"
+                    value={formData.fullRange || ''}
+                    onChange={(e) => setFormData({ ...formData, fullRange: Number(e.target.value) })}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="e.g., 400"
+                    required
+                />
+                <p className="text-xs text-gray-500 mt-1">Distance when fully charged</p>
+                </div>
+
+
+
+                {/* Battery Status Preview */}
+                {formData.batteryCapacity && formData.currentCharge && (
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Battery Status Preview</h4>
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Battery Percentage:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {Math.round((formData.currentCharge / formData.batteryCapacity) * 100)}%
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Condition:</span>
+                            <span className={`font-medium ${
+                                (formData.currentCharge / formData.batteryCapacity) * 100 >= 80 ? 'text-green-600' :
+                                (formData.currentCharge / formData.batteryCapacity) * 100 >= 50 ? 'text-yellow-600' :
+                                (formData.currentCharge / formData.batteryCapacity) * 100 >= 20 ? 'text-orange-600' :
+                                'text-red-600'
+                            }`}>
+                                {(formData.currentCharge / formData.batteryCapacity) * 100 >= 80 ? 'Excellent' :
+                                (formData.currentCharge / formData.batteryCapacity) * 100 >= 50 ? 'Good' :
+                                (formData.currentCharge / formData.batteryCapacity) * 100 >= 20 ? 'Low' :
+                                'Critical'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                )}
 
                 {/* Submit Button */}
                 <div className="flex space-x-3 pt-4">
@@ -306,7 +387,7 @@ return (
                         {ev.brand} {ev.model}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {ev.batteryCapacity} kWh • {ev.range} km range
+                        {ev.batteryCapacity} kWh • {ev.currentRange} km remaining
                     </p>
                     </div>
                 </div>
@@ -322,7 +403,7 @@ return (
                         <Edit3 className="h-4 w-4" />
                     </button>
                     <button
-                        onClick={() => handleDelete(ev.id)}
+                        onClick={() => handleDelete(ev._id)}
                         className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                     >
                         <Trash2 className="h-4 w-4" />
@@ -335,38 +416,34 @@ return (
                 <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Charge</span>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">{ev.currentCharge}%</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{ev.batteryPercentage}%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                     <div
-                    className={`h-3 rounded-full transition-all duration-500 ${
-                        ev.currentCharge > 50 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' :
-                        ev.currentCharge > 20 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                        'bg-gradient-to-r from-red-500 to-red-600'
-                    }`}
-                    style={{ width: `${ev.currentCharge}%` }}
+                    className={`h-3 rounded-full transition-all duration-500 ${batteryBarColor(ev.batteryPercentage)}`}
+                    style={{ width: `${ev.batteryPercentage}%` }}
                     />
                 </div>
                 <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
                     <span>0%</span>
-                    <span>{Math.round(ev.range * (ev.currentCharge / 100))} km remaining</span>
+                    <span>{ev.currentRange} km remaining</span>
                     <span>100%</span>
                 </div>
                 </div>
 
-                {/* Battery Health */}
+                {/* Battery Condition */}
                 <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Battery Health</span>
-                    <span className={`text-sm font-bold ${batteryHealthColor(ev.batteryHealth)}`}>
-                    {ev.batteryHealth.toFixed(1)}%
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Battery Condition</span>
+                    <span className={`text-sm font-bold ${batteryHealthColor(ev.batteryPercentage)}`}>
+                    {ev.batteryCondition}
                     </span>
                 </div>
-                <div className={`p-3 rounded-lg ${batteryHealthBg(ev.batteryHealth)}`}>
+                <div className={`p-3 rounded-lg ${batteryHealthBg(ev.batteryPercentage)}`}>
                     <div className="flex items-center space-x-2">
-                    <Activity className={`h-4 w-4 ${batteryHealthColor(ev.batteryHealth)}`} />
-                    <span className={`text-sm font-medium ${batteryHealthColor(ev.batteryHealth)}`}>
-                        {ev.batteryHealth >= 90 ? 'Excellent' : ev.batteryHealth >= 70 ? 'Good' : 'Fair'}
+                    <Activity className={`h-4 w-4 ${batteryHealthColor(ev.batteryPercentage)}`} />
+                    <span className={`text-sm font-medium ${batteryHealthColor(ev.batteryPercentage)}`}>
+                        {ev.batteryCondition}
                     </span>
                     </div>
                 </div>
@@ -376,16 +453,12 @@ return (
                 <div className="flex space-x-2">
                 {!ev.isDefault && (
                     <button
-                    onClick={() => handleSetDefault(ev.id)}
+                    onClick={() => handleSetDefault(ev._id)}
                     className="flex-1 py-2 px-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors text-sm font-medium"
                     >
                     Set as Default
                     </button>
                 )}
-                <button className="flex-1 py-2 px-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium">
-                    <Settings className="h-4 w-4 inline mr-1" />
-                    Settings
-                </button>
                 </div>
             </div>
             </div>
@@ -393,6 +466,13 @@ return (
         </div>
     )}
     </div>
+
+    {/* Success Modal */}
+    <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ isOpen: false, message: '' })}
+        message={successModal.message}
+    />
 </div>
 );
 };

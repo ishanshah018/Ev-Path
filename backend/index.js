@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const AuthRouter = require('./Routes/AuthRouter');
 const ProductRouter = require('./Routes/ProductRouter');
+const EVRouter = require('./Routes/EVRouter');
+const UserRouter = require('./Routes/UserRouter');
 
 require('dotenv').config();
 require('./Models/db');
@@ -22,6 +24,8 @@ app.use(cors({
 }));
 app.use('/auth', AuthRouter);
 app.use('/products', ProductRouter);
+app.use('/evs', EVRouter);
+app.use('/user', UserRouter);
 
 
 app.listen(PORT, () => {

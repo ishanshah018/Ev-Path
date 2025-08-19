@@ -20,14 +20,27 @@ return context;
 export const AuthProvider = ({ children }) => {
 // State to hold the user object.
 const [user, setUser] = useState(null);
+const [isLoading, setIsLoading] = useState(true);
 
 // Use useEffect to check for a saved user in local storage on component mount.
 useEffect(() => {
 const savedUser = localStorage.getItem('user');
 const savedToken = localStorage.getItem('token');
 if (savedUser && savedToken) {
-    setUser(JSON.parse(savedUser));
+    try {
+        const userData = JSON.parse(savedUser);
+        console.log('Restoring user from localStorage:', userData);
+        setUser(userData);
+    } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+    }
+} else {
+    console.log('No saved user data found in localStorage');
 }
+setIsLoading(false);
 }, []); // The empty dependency array ensures this runs only once.
 
 // Real login function that calls the backend API.
@@ -66,20 +79,56 @@ try {
     }
 
     if (data.success) {
-        const userData = {
-            id: data._id || '1',
-            email: data.email,
-            name: data.name,
-            phone: '+91 98765 43210', // Default phone for now
-            location: 'India', // Default location for now
-            hasCompletedOnboarding: true // Default to true for existing users
-        };
-
-        setUser(userData);
-        // Save the user data and token to local storage.
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', data.jwtToken);
-        return userData;
+        // Get user profile data from backend to get actual phone and location
+        try {
+            const profileResponse = await fetch(`${API_URL}/user/profile`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${data.jwtToken}`
+                }
+            });
+            
+            let userData = {
+                id: data._id || '1',
+                email: data.email,
+                name: data.name,
+                phone: '+91 98765 43210', // Default phone
+                location: 'India', // Default location
+                hasCompletedOnboarding: true
+            };
+            
+            if (profileResponse.ok) {
+                const profileData = await profileResponse.json();
+                if (profileData.success && profileData.data) {
+                    userData = {
+                        ...userData,
+                        phone: profileData.data.phone || '+91 98765 43210',
+                        location: profileData.data.location || 'India'
+                    };
+                }
+            }
+            
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', data.jwtToken);
+            return userData;
+        } catch (profileError) {
+            // If profile fetch fails, use default values
+            const userData = {
+                id: data._id || '1',
+                email: data.email,
+                name: data.name,
+                phone: '+91 98765 43210',
+                location: 'India',
+                hasCompletedOnboarding: true
+            };
+            
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', data.jwtToken);
+            return userData;
+        }
     } else {
         throw new Error(data.message || 'Login failed');
     }
@@ -186,15 +235,88 @@ if (!response.ok) {
 return data;
 };
 
+// Function to update user profile
+const updateProfile = async (profileData) => {
+try {
+    const response = await makeAuthenticatedRequest('/user/profile', {
+        method: 'PUT',
+        body: JSON.stringify(profileData)
+    });
+
+    if (response.success) {
+        // Update local user state
+        const updatedUser = { ...user, ...response.data };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+
+    return response;
+} catch (error) {
+    console.error('Error updating profile:', error);
+    throw error;
+}
+};
+
+// Function to change password
+const changePassword = async (passwordData) => {
+try {
+    const response = await makeAuthenticatedRequest('/user/password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordData)
+    });
+
+    return response;
+} catch (error) {
+    console.error('Error changing password:', error);
+    // Provide more specific error messages
+    if (error.message.includes('Current password is incorrect')) {
+        throw new Error('Current password is incorrect. Please try again.');
+    } else if (error.message.includes('New password must be different')) {
+        throw new Error('New password must be different from current password.');
+    } else if (error.message.includes('Bad request')) {
+        throw new Error('Please check your input. Password must be at least 4 characters long.');
+    } else if (error.message.includes('Session expired')) {
+        throw new Error('Session expired. Please login again.');
+    } else if (error.message.includes('No authentication token')) {
+        throw new Error('Please login again to continue.');
+    } else {
+        throw new Error(error.message || 'Password change failed. Please try again.');
+    }
+}
+};
+
+// Function to delete account
+const deleteAccount = async (password) => {
+try {
+    const response = await makeAuthenticatedRequest('/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({ password })
+    });
+
+    if (response.success) {
+        logout();
+    }
+
+    return response;
+} catch (error) {
+    console.error('Error deleting account:', error);
+    throw error;
+}
+};
+
 return (
 // Provide the user state and authentication functions to children components.
 <AuthContext.Provider value={{ 
     user, 
+    isLoading,
     login, 
     signup, 
     logout, 
     completeOnboarding, 
-    makeAuthenticatedRequest 
+    makeAuthenticatedRequest,
+    updateProfile,
+    changePassword,
+    deleteAccount
 }}>
     {children}
 </AuthContext.Provider>

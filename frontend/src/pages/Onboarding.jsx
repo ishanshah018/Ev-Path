@@ -14,7 +14,8 @@ type: '',
 brand: '',
 model: '',
 batteryCapacity: 0,
-range: 0,
+currentCharge: 0,
+fullRange: 0,
 isDefault: true
 });
 
@@ -47,7 +48,7 @@ const evModels = {
 };
 
 // Calculate battery percentage for the visualizer.
-const batteryPercentage = formData.batteryCapacity > 0 ? Math.min((formData.batteryCapacity / 100) * 100, 100) : 0;
+const batteryPercentage = formData.batteryCapacity > 0 && formData.currentCharge > 0 ? Math.min((formData.currentCharge / formData.batteryCapacity) * 100, 100) : 0;
 
 // Function to move to the next step.
 const handleNext = () => {
@@ -64,12 +65,17 @@ if (currentStep > 1) {
 };
 
 // Function to handle the final submission of the form.
-const handleSubmit = () => {
+const handleSubmit = async () => {
 // Only submit if all required fields are filled.
-if (formData.type && formData.brand && formData.model && formData.batteryCapacity && formData.range) {
-    addEV(formData);
-    completeOnboarding();
-    navigate('/dashboard');
+if (formData.type && formData.brand && formData.model && formData.batteryCapacity && formData.currentCharge && formData.fullRange) {
+    try {
+        await addEV(formData);
+        completeOnboarding();
+        navigate('/dashboard');
+    } catch (error) {
+        console.error('Error adding EV:', error);
+        alert('Error adding EV. Please try again.');
+    }
 }
 };
 
@@ -81,7 +87,7 @@ switch (step) {
     case 2:
     return formData.brand !== '' && formData.model !== '';
     case 3:
-    return formData.batteryCapacity > 0 && formData.range > 0;
+    return formData.batteryCapacity > 0 && formData.currentCharge > 0 && formData.fullRange > 0;
     default:
     return false;
 }
@@ -234,42 +240,72 @@ return (
                 type="number"
                 value={formData.batteryCapacity || ''}
                 onChange={(e) => setFormData({ ...formData, batteryCapacity: Number(e.target.value) })}
-                placeholder="e.g., 40"
+                placeholder="e.g., 60"
                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">Total energy your battery can store</p>
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Range (km)
+                Current Charge (kWh)
                 </label>
                 <input
                 type="number"
-                value={formData.range || ''}
-                onChange={(e) => setFormData({ ...formData, range: Number(e.target.value) })}
-                placeholder="e.g., 300"
+                value={formData.currentCharge || ''}
+                onChange={(e) => setFormData({ ...formData, currentCharge: Number(e.target.value) })}
+                placeholder="e.g., 48"
                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">Energy left in your battery</p>
             </div>
 
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Full Range (km)
+                </label>
+                <input
+                type="number"
+                value={formData.fullRange || ''}
+                onChange={(e) => setFormData({ ...formData, fullRange: Number(e.target.value) })}
+                placeholder="e.g., 400"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Distance when fully charged</p>
+            </div>
+
+
+
             {/* Battery Visualization */}
+            {formData.batteryCapacity && formData.currentCharge && (
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
                 <div className="flex items-center space-x-4">
                 <Battery className="h-8 w-8 text-blue-600" />
                 <div className="flex-1">
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span>Battery Capacity</span>
-                    <span>{formData.batteryCapacity} kWh</span>
+                    <span>Battery Status</span>
+                    <span>{Math.round(batteryPercentage)}%</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
                     <div
-                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-3 rounded-full transition-all duration-500"
+                        className={`h-3 rounded-full transition-all duration-500 ${
+                            batteryPercentage >= 80 ? 'bg-green-500' :
+                            batteryPercentage >= 50 ? 'bg-yellow-500' :
+                            batteryPercentage >= 20 ? 'bg-orange-500' :
+                            'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min(batteryPercentage, 100)}%` }}
                     ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span>{Math.round((batteryPercentage / 100) * formData.fullRange)} km remaining</span>
+                    <span>100%</span>
                     </div>
                 </div>
                 </div>
             </div>
+            )}
             </div>
         </div>
         )}

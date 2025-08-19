@@ -25,32 +25,32 @@ return () => clearInterval(timer);
 // Get the default EV from the context.
 const defaultEV = getDefaultEV();
 
-// Hardcoded data for recent trips. In a real app, this would come from an API or state.
-const recentTrips = [
-{ id: 1, destination: 'Downtown Mall', distance: 25, date: '2024-01-15', efficiency: 4.2, cost: 180 },
-{ id: 2, destination: 'Airport', distance: 45, date: '2024-01-14', efficiency: 4.5, cost: 320 },
-{ id: 3, destination: 'Beach Resort', distance: 78, date: '2024-01-13', efficiency: 4.1, cost: 560 },
-];
+// Empty arrays for now - will be populated with real data later
+const recentTrips = [];
+const nearbyStations = [];
 
-// Hardcoded data for nearby charging stations.
-const nearbyStations = [
-{ id: 1, name: 'Green Energy Hub', distance: 2.1, type: 'Fast Charge', available: 3, total: 4, price: 8.5 },
-{ id: 2, name: 'City Center Station', distance: 3.5, type: 'Standard', available: 2, total: 6, price: 6.2 },
-{ id: 3, name: 'Highway Plaza', distance: 5.2, type: 'Fast Charge', available: 1, total: 2, price: 9.0 },
-];
-
-// Function to determine the color of the battery health text based on its value.
-const batteryHealthColor = (health) => {
-if (health >= 90) return 'text-green-600';
-if (health >= 70) return 'text-yellow-600';
+// Function to determine the color of the battery condition text based on its value.
+const batteryHealthColor = (percentage) => {
+if (percentage >= 80) return 'text-green-600';
+if (percentage >= 50) return 'text-yellow-600';
+if (percentage >= 20) return 'text-orange-600';
 return 'text-red-600';
 };
 
-// Function to determine the background color of the battery health card.
-const batteryHealthBg = (health) => {
-if (health >= 90) return 'bg-green-100 dark:bg-green-900/20';
-if (health >= 70) return 'bg-yellow-100 dark:bg-yellow-900/20';
+// Function to determine the background color of the battery condition card.
+const batteryHealthBg = (percentage) => {
+if (percentage >= 80) return 'bg-green-100 dark:bg-green-900/20';
+if (percentage >= 50) return 'bg-yellow-100 dark:bg-yellow-900/20';
+if (percentage >= 20) return 'bg-orange-100 dark:bg-orange-900/20';
 return 'bg-red-100 dark:bg-red-900/20';
+};
+
+// Function to determine the battery bar color.
+const batteryBarColor = (percentage) => {
+if (percentage >= 80) return 'bg-gradient-to-r from-green-500 to-green-600';
+if (percentage >= 50) return 'bg-gradient-to-r from-yellow-500 to-yellow-600';
+if (percentage >= 20) return 'bg-gradient-to-r from-orange-500 to-orange-600';
+return 'bg-gradient-to-r from-red-500 to-red-600';
 };
 
 // If the user has not completed onboarding, show a setup screen.
@@ -127,7 +127,7 @@ return (
             </div>
             <div className="ml-4">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Trips</p>
-            <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">{recentTrips.length}</p>
+            <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">0</p>
             </div>
         </div>
         </div>
@@ -139,7 +139,7 @@ return (
             </div>
             <div className="ml-4">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Savings</p>
-            <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">₹2,450</p>
+            <p className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">₹0</p>
             </div>
         </div>
         </div>
@@ -170,47 +170,44 @@ return (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Battery Level</span>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">{defaultEV.currentCharge}%</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{defaultEV.batteryPercentage}%</span>
                     </div>
                     <div className="relative">
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
                         <div
-                        className={`h-4 rounded-full transition-all duration-1000 ${
-                            defaultEV.currentCharge > 50 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' :
-                            defaultEV.currentCharge > 20 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                            'bg-gradient-to-r from-red-500 to-red-600'
-                        }`}
-                        style={{ width: `${defaultEV.currentCharge}%` }}
+                        className={`h-4 rounded-full transition-all duration-1000 ${batteryBarColor(defaultEV.batteryPercentage)}`}
+                        style={{ width: `${defaultEV.batteryPercentage}%` }}
                         />
                     </div>
                     <Battery className="absolute -right-8 top-0 h-4 w-4 text-gray-400" />
                     </div>
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                     <span>0%</span>
-                    <span className="font-medium">Range: {Math.round(defaultEV.range * (defaultEV.currentCharge / 100))} km</span>
+                    <span className="font-medium">Range: {defaultEV.currentRange} km</span>
                     <span>100%</span>
                     </div>
                 </div>
 
-                {/* Battery Health */}
+                {/* Battery Condition */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Battery Health</span>
-                    <span className={`text-sm font-bold ${batteryHealthColor(defaultEV.batteryHealth)}`}>
-                        {defaultEV.batteryHealth.toFixed(1)}%
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Battery Condition</span>
+                    <span className={`text-sm font-bold ${batteryHealthColor(defaultEV.batteryPercentage)}`}>
+                        {defaultEV.batteryCondition}
                     </span>
                     </div>
-                    <div className={`p-4 rounded-lg ${batteryHealthBg(defaultEV.batteryHealth)}`}>
+                    <div className={`p-4 rounded-lg ${batteryHealthBg(defaultEV.batteryPercentage)}`}>
                     <div className="flex items-center space-x-2">
-                        <Activity className={`h-5 w-5 ${batteryHealthColor(defaultEV.batteryHealth)}`} />
+                        <Activity className={`h-5 w-5 ${batteryHealthColor(defaultEV.batteryPercentage)}`} />
                         <div>
-                        <p className={`text-sm font-medium ${batteryHealthColor(defaultEV.batteryHealth)}`}>
-                            {defaultEV.batteryHealth >= 90 ? 'Excellent' : defaultEV.batteryHealth >= 70 ? 'Good' : 'Fair'}
+                        <p className={`text-sm font-medium ${batteryHealthColor(defaultEV.batteryPercentage)}`}>
+                            {defaultEV.batteryCondition}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {defaultEV.batteryHealth >= 90 ? 'Your battery is in excellent condition' :
-                            defaultEV.batteryHealth >= 70 ? 'Battery performance is good' :
-                            'Consider battery maintenance'}
+                            {defaultEV.batteryCondition === 'Excellent' ? 'Your battery is in excellent condition' :
+                            defaultEV.batteryCondition === 'Good' ? 'Battery performance is good' :
+                            defaultEV.batteryCondition === 'Low' ? 'Battery level is low, consider charging' :
+                            'Battery level is critical, charge immediately'}
                         </p>
                         </div>
                     </div>
@@ -236,26 +233,10 @@ return (
             </div>
             </div>
             <div className="p-6">
-            <div className="space-y-4">
-                {recentTrips.map((trip) => (
-                <div key={trip.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-                    <Car className="h-6 w-6 text-emerald-600" />
-                    </div>
-                    <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">{trip.destination}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {trip.distance} km • {trip.efficiency} km/kWh
-                        </p>
-                    </div>
-                    </div>
-                    <div className="text-right">
-                    <p className="font-medium text-gray-900 dark:text-white">₹{trip.cost}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{trip.date}</p>
-                    </div>
-                </div>
-                ))}
+            <div className="text-center py-8">
+                <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No trips yet</h3>
+                <p className="text-gray-600 dark:text-gray-400">Start planning your first trip to see it here</p>
             </div>
             </div>
         </div>
@@ -278,33 +259,10 @@ return (
             </div>
             </div>
             <div className="p-6">
-            <div className="space-y-4">
-                {nearbyStations.map((station) => (
-                <div key={station.id} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900 dark:text-white">{station.name}</h3>
-                    <span className="text-sm text-emerald-600 font-medium">₹{station.price}/kWh</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                    <span>{station.distance} km away</span>
-                    <span className="flex items-center">
-                        <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
-                        station.available > 0 ? 'bg-green-500' : 'bg-red-500'
-                        }`} />
-                        {station.available}/{station.total} available
-                    </span>
-                    </div>
-                    <div className="mt-2">
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        station.type === 'Fast Charge'  
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-                    }`}>
-                        {station.type}
-                    </span>
-                    </div>
-                </div>
-                ))}
+            <div className="text-center py-8">
+                <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No nearby stations</h3>
+                <p className="text-gray-600 dark:text-gray-400">Use the map to find charging stations near you</p>
             </div>
             </div>
         </div>
