@@ -83,11 +83,7 @@ function AppContent() {
                 <MapPage />
               </ProtectedRoute>
             } />
-            <Route path="/trip-planner" element={
-              <ProtectedRoute>
-                <TripPlannerPage />
-              </ProtectedRoute>
-            } />
+            <Route path="/trip-planner" element={<TripPlannerPage />} />
             <Route path="/my-evs" element={
               <ProtectedRoute>
                 <ManageEVsPage />

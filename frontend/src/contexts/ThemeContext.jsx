@@ -3,6 +3,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 // Create a context for the theme.
 const ThemeContext = createContext(undefined);
 
+// Export the ThemeContext for direct usage
+export { ThemeContext };
+
 // A custom hook to access the theme context, with an error check.
 export const useTheme = () => {
 const context = useContext(ThemeContext);
