@@ -111,16 +111,7 @@ return (
             >
                 Trip Planner
             </Link>
-            <Link
-                to="/chatbot"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/chatbot')
-                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400'
-                }`}
-            >
-                AI Assistant
-            </Link>
+            
             <Link
                 to="/settings"
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
