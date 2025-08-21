@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Battery, Car, MapPin, Route, Clock, Star, Plus, ChevronRight, Zap, AlertTriangle, Activity, MessageCircle, BookOpen, Users } from 'lucide-react';
+import { Battery, Car, MapPin, Route, Clock, Star, Plus, ChevronRight, Zap, AlertTriangle, Activity, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useEV } from '../contexts/EVContext';
 
@@ -26,7 +26,6 @@ return () => clearInterval(timer);
 const defaultEV = getDefaultEV();
 
 // Empty arrays for now - will be populated with real data later
-const recentTrips = [];
 const nearbyStations = [];
 
 // Function to determine the color of the battery condition text based on its value.
@@ -217,29 +216,6 @@ return (
             </div>
             </div>
         )}
-
-        {/* Recent Trips Section */}
-        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Trips</h2>
-                <Link
-                to="/trips"
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center"
-                >
-                View All
-                <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-            </div>
-            </div>
-            <div className="p-6">
-            <div className="text-center py-8">
-                <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No trips yet</h3>
-                <p className="text-gray-600 dark:text-gray-400">Start planning your first trip to see it here</p>
-            </div>
-            </div>
-        </div>
         </div>
 
         {/* Sidebar */}
@@ -270,20 +246,6 @@ return (
                 >
                 <MessageCircle className="h-5 w-5 text-purple-600 mr-3" />
                 <span className="text-purple-700 dark:text-purple-400 font-medium">AI Assistant</span>
-                </Link>
-                <Link
-                to="/blogs"
-                className="flex items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
-                >
-                <BookOpen className="h-5 w-5 text-emerald-600 mr-3" />
-                <span className="text-emerald-700 dark:text-emerald-400 font-medium">Read Blogs</span>
-                </Link>
-                <Link
-                to="/community"
-                className="flex items-center p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors"
-                >
-                <Users className="h-5 w-5 text-pink-600 mr-3" />
-                <span className="text-pink-700 dark:text-pink-400 font-medium">Join Community</span>
                 </Link>
                 <Link
                 to="/my-evs"
