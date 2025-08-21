@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Car, Map, Route, Settings } from 'lucide-react';
+import { Home, Car, Map, Route, Settings, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const MobileNav = () => {
@@ -60,6 +60,18 @@ return (
     >
         <Route className="h-5 w-5" />
         <span className="text-xs">Trip Plan</span>
+    </Link>
+
+    <Link
+        to="/chatbot"
+        className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
+        isActive('/chatbot')
+            ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+        }`}
+    >
+        <Bot className="h-5 w-5" />
+        <span className="text-xs">AI Assistant</span>
     </Link>
 
     <Link

@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from ocm.views import ev_stations, route_chargers, plan_trip
+from ocm.views import ev_stations, route_chargers, plan_trip, chatbot
 
 
 
@@ -26,4 +26,5 @@ urlpatterns = [
     path("api/ev-stations/", ev_stations),
     path("api/route-chargers/", route_chargers),
     path("api/plan-trip", plan_trip),
+    path("api/chatbot/", chatbot),
 ]

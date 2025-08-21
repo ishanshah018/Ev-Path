@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>EV-PATH Chatbot API Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Chatbot API</h2>
+        <button onclick="testChatbot()">Test Chatbot Endpoint</button>
+        <div id="chatbot-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test EV Stations API</h2>
+        <button onclick="testEVStations()">Test EV Stations Endpoint</button>
+        <div id="ev-stations-result" class="result"></div>
+    </div>
+
+    <script>
+        async function testChatbot() {
+            const resultDiv = document.getElementById('chatbot-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/chatbot/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'What are the benefits of electric vehicles?',
+                        conversation_history: []
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = `✅ Success!\n\nResponse: ${data.response}\n\nConversation ID: ${data.conversation_id}\n\nRate Limited: ${data.rate_limited || false}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ Error: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ Network Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testEVStations() {
+            const resultDiv = document.getElementById('ev-stations-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/ev-stations/?lat=19.0760&lon=72.8777&distance=10');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `✅ Success!\n\nFound ${data.length} EV stations near Mumbai`;
+                    resultDiv.className = 'result success';
+                } else {
+                    const data = await response.json();
+                    resultDiv.textContent = `❌ Error: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ Network Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

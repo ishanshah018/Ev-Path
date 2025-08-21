@@ -2,9 +2,11 @@ import requests, hashlib, json,math
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
-from django.views.decorators.http import require_GET
 from django.views.decorators.cache import cache_page
+import datetime
 
 
 OSRM_URL = "https://router.project-osrm.org/route/v1/driving"
@@ -23,6 +25,190 @@ EV_RANGE_KM = 300  # km on full charge
 EV_BATTERY_CAPACITY = 50  # kWh
 CHARGING_COST_PER_KWH = 8.0  # INR per kWh
 FAST_CHARGING_TIME_MINUTES = 45  # minutes for 20-80% charge
+
+
+def get_ev_fallback_response(user_message):
+    """
+    Provide intelligent fallback responses for common EV questions
+    when the Gemini API is rate-limited
+    """
+    message_lower = user_message.lower()
+    
+    # EV Benefits
+    if any(word in message_lower for word in ['benefit', 'advantage', 'why ev', 'why electric']):
+        return """🚗 **Benefits of Electric Vehicles:**
+
+✅ **Cost Savings**: EVs cost ₹2-3 per km vs ₹6-8 for petrol cars
+✅ **Environmental**: Zero tailpipe emissions, 60-70% less CO2 overall
+✅ **Performance**: Instant torque, smooth acceleration, quiet operation
+✅ **Maintenance**: Fewer moving parts, lower maintenance costs
+✅ **Incentives**: Government subsidies, tax benefits, free parking in many cities
+✅ **Energy Independence**: Reduced dependence on imported fossil fuels
+
+**Real-world example**: A ₹15 lakh EV saves ₹50,000-80,000 annually in fuel costs!"""
+
+    # EV Range
+    elif any(word in message_lower for word in ['range', 'how far', 'distance', 'battery']):
+        return """🔋 **EV Range Information:**
+
+**Modern EV Ranges (India):**
+• Tata Nexon EV: 312-437 km
+• MG ZS EV: 419-461 km  
+• Hyundai Kona: 452 km
+• Mercedes EQC: 471 km
+• Tesla Model 3: 491-675 km
+
+**Factors affecting range:**
+• Driving style (aggressive vs eco)
+• Weather conditions (AC/heating)
+• Terrain (hills vs flat roads)
+• Speed (highway vs city)
+• Battery age and health
+
+**Tip**: Most EVs show 20-30% better range in city driving vs highway!"""
+
+    # Charging
+    elif any(word in message_lower for word in ['charge', 'charging', 'plug', 'socket']):
+        return """⚡ **EV Charging Guide:**
+
+**Charging Types:**
+• **Slow Charging (3-6 kW)**: 6-8 hours for full charge, best for overnight
+• **Fast Charging (22-50 kW)**: 1-2 hours for 80% charge
+• **Ultra-fast (100+ kW)**: 20-30 minutes for 80% charge
+
+**Charging Costs (India):**
+• Home charging: ₹6-8 per kWh
+• Public slow chargers: ₹8-12 per kWh
+• Fast chargers: ₹15-25 per kWh
+
+**Charging Tips:**
+• Charge to 80% for daily use (better for battery life)
+• Use fast chargers only when needed
+• Plan charging stops during long trips
+• Install home charger for convenience"""
+
+    # Cost Comparison
+    elif any(word in message_lower for word in ['cost', 'price', 'expensive', 'cheap', 'save', 'money']):
+        return """💰 **EV vs Petrol Cost Comparison:**
+
+**Fuel Costs (per km):**
+• Petrol car: ₹6-8 per km
+• Diesel car: ₹5-7 per km  
+• Electric car: ₹2-3 per km
+
+**Annual Savings Example:**
+• Petrol car (15,000 km/year): ₹90,000-120,000
+• EV (15,000 km/year): ₹30,000-45,000
+• **Annual savings**: ₹45,000-75,000!
+
+**Additional Savings:**
+• Lower maintenance: ₹10,000-20,000/year
+• Tax benefits: ₹50,000-1,00,000
+• Free parking in many cities
+• Lower insurance in some cases
+
+**Break-even**: 3-5 years depending on usage!"""
+
+    # Trip Planning
+    elif any(word in message_lower for word in ['trip', 'journey', 'road trip', 'travel', 'route']):
+        return """🗺️ **EV Trip Planning Tips:**
+
+**Before You Go:**
+• Check your EV's range and plan charging stops
+• Use apps like EV-PATH to find charging stations
+• Book charging slots if required
+• Check station availability and connector types
+
+**During the Trip:**
+• Drive in eco mode for better range
+• Use regenerative braking
+• Avoid aggressive acceleration
+• Plan stops every 200-300 km
+
+**Charging Strategy:**
+• Charge to 80% at fast chargers (faster than 100%)
+• Use slow chargers for overnight stops
+• Have backup charging options
+• Keep emergency contact numbers
+
+**Popular EV Routes in India:**
+• Mumbai-Pune: Well-connected with chargers
+• Delhi-Agra: Multiple charging options
+• Bangalore-Mysore: Good infrastructure
+• Chennai-Bangalore: Improving rapidly"""
+
+    # Environmental Impact
+    elif any(word in message_lower for word in ['environment', 'pollution', 'green', 'eco', 'carbon']):
+        return """🌱 **Environmental Impact of EVs:**
+
+**Direct Benefits:**
+• Zero tailpipe emissions
+• No local air pollution
+• Reduced noise pollution
+• Better air quality in cities
+
+**Overall Carbon Footprint:**
+• EVs: 60-70% less CO2 than petrol cars
+• Even with coal-based electricity
+• Much better with renewable energy
+• Improving as grid gets greener
+
+**Resource Impact:**
+• Battery materials are recyclable
+• Lower water usage in operation
+• Reduced oil dependency
+• Support for renewable energy
+
+**India's EV Mission:**
+• Target: 30% EVs by 2030
+• Reduce oil imports by ₹1.5 lakh crore
+• Cut CO2 emissions by 37 million tonnes
+• Create 10 million jobs"""
+
+    # Maintenance
+    elif any(word in message_lower for word in ['maintenance', 'service', 'repair', 'care']):
+        return """🔧 **EV Maintenance Guide:**
+
+**What EVs Don't Need:**
+• Oil changes
+• Spark plug replacement
+• Exhaust system repairs
+• Transmission maintenance
+• Fuel filter changes
+
+**What EVs Do Need:**
+• Battery health checks
+• Brake fluid replacement
+• Tire rotation and replacement
+• Air filter changes
+• Software updates
+
+**Maintenance Costs:**
+• EVs: ₹5,000-15,000/year
+• Petrol cars: ₹15,000-30,000/year
+• **Savings**: ₹10,000-15,000/year
+
+**Battery Care:**
+• Avoid extreme temperatures
+• Don't charge to 100% regularly
+• Use slow charging when possible
+• Keep battery between 20-80% for daily use
+• Modern batteries last 8-15 years"""
+
+    # Default response for other questions
+    else:
+        return """I'm currently experiencing high demand and can't process your request right now. 
+
+However, I can help you with EV-related questions! Here are some common topics I can assist with:
+
+🚗 **EV Technology**: Battery types, range, performance
+⚡ **Charging**: Types of chargers, charging times, infrastructure  
+💰 **Cost Analysis**: EV vs petrol/diesel costs, savings
+🗺️ **Trip Planning**: Route optimization, charging stops
+🌱 **Environmental Impact**: CO2 savings, sustainability
+🔧 **Maintenance**: EV care, battery health
+
+Please try asking about any of these specific topics, or try again in a few minutes!"""
 
 
 def _cache_key(name: str, params: dict) -> str:
@@ -730,3 +916,156 @@ def plan_trip(request):
         
     except Exception as e:
         return JsonResponse({"error": "Trip planning failed", "detail": str(e)}, status=500)
+
+
+@csrf_exempt
+def chatbot(request):
+    """
+    EV-focused chatbot using Gemini AI API
+    POST params:
+      message: user's question
+      conversation_history: list of previous messages (optional)
+    Returns:
+      { response: str, conversation_id: str }
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_message = data.get('message', '').strip()
+            conversation_history = data.get('conversation_history', [])
+            
+            if not user_message:
+                return JsonResponse({"error": "Message is required"}, status=400)
+            
+            # Get Gemini API key from settings
+            gemini_api_key = getattr(settings, 'GEMINI_API_KEY', None)
+            if not gemini_api_key:
+                return JsonResponse({"error": "Gemini API key not configured"}, status=500)
+            
+            # Build conversation context for EV-focused responses
+            system_prompt = """You are an expert EV (Electric Vehicle) assistant for EV-PATH, a comprehensive EV navigation and planning platform. 
+
+Your expertise includes:
+- Electric vehicle technology, specifications, and performance
+- EV charging infrastructure, connectors, and charging speeds
+- EV range optimization and battery management
+- EV cost analysis and savings compared to ICE vehicles
+- EV trip planning and route optimization
+- Environmental impact of EVs vs traditional vehicles
+- EV maintenance and best practices
+- EV incentives, policies, and market trends in India
+
+Guidelines:
+1. Always provide accurate, helpful information about EVs
+2. If asked about non-EV topics, politely redirect to EV-related discussions
+3. Use Indian context when relevant (prices in INR, Indian cities, etc.)
+4. Be conversational but professional
+5. Keep responses concise but informative
+6. If you don't know something specific, acknowledge it and suggest reliable sources
+
+Current platform features: EV station finder, trip planning, cost comparison, route optimization with charging stops."""
+
+            # Build the conversation for Gemini
+            messages = [{"role": "user", "parts": [{"text": system_prompt}]}]
+            
+            # Add conversation history if provided
+            for msg in conversation_history[-5:]:  # Keep last 5 messages for context
+                if msg.get('role') and msg.get('content'):
+                    messages.append({
+                        "role": msg['role'],
+                        "parts": [{"text": msg['content']}]
+                    })
+            
+            # Add current user message
+            messages.append({"role": "user", "parts": [{"text": user_message}]})
+            
+            # Call Gemini API
+            gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+            headers = {
+                "Content-Type": "application/json",
+            }
+            
+            payload = {
+                "contents": messages,
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 1024,
+                },
+                "safetySettings": [
+                    {
+                        "category": "HARM_CATEGORY_HARASSMENT",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        "category": "HARM_CATEGORY_HATE_SPEECH",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    }
+                ]
+            }
+            
+            response = requests.post(
+                f"{gemini_url}?key={gemini_api_key}",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code != 200:
+                # Check if it's a rate limit error
+                if response.status_code == 429:
+                    # Provide intelligent fallback responses for common EV questions
+                    fallback_response = get_ev_fallback_response(user_message)
+                    
+                    return JsonResponse({
+                        "response": fallback_response,
+                        "conversation_id": hashlib.md5(f"{user_message}:{len(conversation_history)}".encode()).hexdigest()[:12],
+                        "timestamp": json.dumps(datetime.datetime.now().isoformat()),
+                        "rate_limited": True
+                    })
+                else:
+                    return JsonResponse({
+                        "error": "Failed to get response from Gemini API",
+                        "detail": response.text
+                    }, status=500)
+            
+            gemini_data = response.json()
+            
+            # Extract the response text
+            if 'candidates' in gemini_data and len(gemini_data['candidates']) > 0:
+                candidate = gemini_data['candidates'][0]
+                if 'content' in candidate and 'parts' in candidate['content']:
+                    parts = candidate['content']['parts']
+                    if len(parts) > 0 and 'text' in parts[0]:
+                        ai_response = parts[0]['text'].strip()
+                    else:
+                        ai_response = "I'm sorry, I couldn't generate a proper response. Please try again."
+                else:
+                    ai_response = "I'm sorry, I couldn't generate a proper response. Please try again."
+            else:
+                ai_response = "I'm sorry, I couldn't generate a proper response. Please try again."
+            
+            # Generate conversation ID for tracking
+            conversation_id = hashlib.md5(f"{user_message}:{len(conversation_history)}".encode()).hexdigest()[:12]
+            
+            return JsonResponse({
+                "response": ai_response,
+                "conversation_id": conversation_id,
+                "timestamp": json.dumps(datetime.datetime.now().isoformat())
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": "Chatbot error", "detail": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Only POST method allowed"}, status=405)

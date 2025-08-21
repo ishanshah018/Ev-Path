@@ -77,3 +77,6 @@ STATIC_URL = "static/"
 
 # pull your OCM key from env
 OCM_API_KEY = os.getenv("OCM_API_KEY")
+
+# Gemini AI API key for chatbot
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
