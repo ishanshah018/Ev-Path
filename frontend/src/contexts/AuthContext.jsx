@@ -224,6 +224,11 @@ const response = await fetch(`${API_URL}${url}`, requestOptions);
 const data = await response.json();
 
 if (!response.ok) {
+    // Handle password-related 401 errors differently (don't logout for password errors)
+    if (response.status === 401 && (url.includes('/password') || data.message?.includes('password'))) {
+        throw new Error(data.message || 'Request failed');
+    }
+    
     if (response.status === 403 || response.status === 401) {
         // Token expired or invalid, logout user
         logout();

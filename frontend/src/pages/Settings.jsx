@@ -131,7 +131,12 @@ setFormData({
 });
 } catch (error) {
 console.error('Password change error:', error);
-setSuccessModal({ isOpen: true, message: error.message, title: 'Error!' });
+// Handle specific error for wrong current password
+if (error.message.includes('Current password is incorrect')) {
+    setSuccessModal({ isOpen: true, message: 'Current password is wrong. Please enter the correct current password.', title: 'Error!' });
+} else {
+    setSuccessModal({ isOpen: true, message: error.message, title: 'Error!' });
+}
 }
 };
 

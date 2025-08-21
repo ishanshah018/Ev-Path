@@ -244,28 +244,6 @@ return (
 
         {/* Sidebar */}
         <div className="space-y-8">
-        {/* Nearby Charging Stations */}
-        <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Nearby Stations</h2>
-                <Link
-                to="/map"
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center"
-                >
-                View Map
-                <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-            </div>
-            </div>
-            <div className="p-6">
-            <div className="text-center py-8">
-                <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No nearby stations</h3>
-                <p className="text-gray-600 dark:text-gray-400">Use the map to find charging stations near you</p>
-            </div>
-            </div>
-        </div>
 
         {/* Quick Actions */}
         <div className="bg-white/80 backdrop-blur-sm dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">

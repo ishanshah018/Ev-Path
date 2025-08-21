@@ -162,11 +162,12 @@ export default function TripPlannerPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${theme.text}`}>
-            🚗 Professional EV Trip Planner
+              Professional EV Trip Planner
           </h1>
           <p className={`text-lg ${theme.textSecondary} max-w-3xl mx-auto`}>
             Plan your perfect EV journey with accurate routing, real charging stations, detailed cost analysis, and environmental impact assessment
           </p>
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -322,7 +323,8 @@ export default function TripPlannerPage() {
                 </h3>
                 {tripData && (
                   <div className={`text-sm ${theme.textMuted}`}>
-                    {tripData.charging_stations.length} charging stations found
+                    {tripData.charging_stations_summary?.total_found || tripData.charging_stations.length} real charging stations found
+                    
                   </div>
                 )}
               </div>
@@ -389,7 +391,14 @@ export default function TripPlannerPage() {
                         >
                           <Popup>
                             <div className="max-w-xs">
-                              <div className="font-bold text-lg mb-2">⚡ {station.name}</div>
+                              <div className="font-bold text-lg mb-2">
+                                ⚡ {station.name}
+                                {station.real_data && (
+                                  <span className="ml-2 text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">
+                                    Real Data
+                                  </span>
+                                )}
+                              </div>
                               <div className="space-y-1 text-sm">
                                 <div><strong>📍 Address:</strong> {station.address}</div>
                                 {station.town && <div><strong>🏘️ City:</strong> {station.town}</div>}
@@ -404,15 +413,24 @@ export default function TripPlannerPage() {
                                 {station.distance_from_route !== undefined && (
                                   <div><strong>📏 Distance from route:</strong> {station.distance_from_route} km</div>
                                 )}
+                                {station.score && (
+                                  <div><strong>⭐ Score:</strong> {station.score}/100</div>
+                                )}
                                 {station.connections && station.connections.length > 0 && (
                                   <div className="mt-2">
                                     <strong>🔌 Connectors:</strong>
                                     {station.connections.slice(0, 3).map((conn, idx) => (
                                       <div key={idx} className="text-xs text-gray-600 ml-2">
                                         • {conn.type} {conn.power_kw && `(${conn.power_kw} kW)`}
+                                        {conn.charging_speed && ` - ${conn.charging_speed}`}
                                         {conn.quantity > 1 && ` × ${conn.quantity}`}
                                       </div>
                                     ))}
+                                  </div>
+                                )}
+                                {station.last_verified && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Last verified: {new Date(station.last_verified).toLocaleDateString()}
                                   </div>
                                 )}
                               </div>
@@ -622,7 +640,7 @@ export default function TripPlannerPage() {
                     <div className="flex items-center">
                       <Zap className="h-6 w-6 text-yellow-600 mr-3" />
                       <h3 className={`text-xl font-semibold ${theme.text}`}>
-                        Charging Stations ({tripData.charging_stations.length})
+                        Real Charging Stations ({tripData.charging_stations.length})
                       </h3>
                     </div>
                     {expandedSections.stations ? 
@@ -637,14 +655,39 @@ export default function TripPlannerPage() {
                         <div key={station.id || index} className={`p-4 rounded-lg border ${theme.card} hover:shadow-md transition-shadow`}>
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className={`font-semibold ${theme.text}`}>{station.name}</div>
+                              <div className="flex items-center gap-2">
+                                <div className={`font-semibold ${theme.text}`}>{station.name}</div>
+                                {station.real_data && (
+                                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">
+                                    Real Data
+                                  </span>
+                                )}
+                                {station.score && (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    ⭐ {station.score}
+                                  </span>
+                                )}
+                              </div>
                               <div className={`text-sm ${theme.textSecondary}`}>
                                 {station.address}
                                 {station.town && `, ${station.town}`}
                               </div>
                               <div className={`text-xs ${theme.textMuted} mt-1`}>
                                 {station.operator && `Operator: ${station.operator}`}
+                                {station.last_verified && (
+                                  <span className="ml-2">• Verified: {new Date(station.last_verified).toLocaleDateString()}</span>
+                                )}
                               </div>
+                              {station.connections && station.connections.length > 0 && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {station.connections.slice(0, 2).map((conn, idx) => (
+                                    <span key={idx} className="mr-2">
+                                      {conn.type} {conn.power_kw && `(${conn.power_kw} kW)`}
+                                      {conn.charging_speed && ` - ${conn.charging_speed}`}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                             <div className="text-right ml-4">
                               <div className={`text-sm font-semibold ${theme.text}`}>

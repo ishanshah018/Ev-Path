@@ -517,46 +517,131 @@ def plan_trip(request):
             
             total_charging_time = charging_stops_count * FAST_CHARGING_TIME_MINUTES
         
-        # 5. Get charging stations along route
+        # 5. Get comprehensive charging stations along route
         coords = route["geometry"]["coordinates"]
-        samples = _sample_along_route(coords, sample_km=50)  # Sample every 50km for charging stations
+        samples = _sample_along_route(coords, sample_km=30)  # Sample every 30km for better coverage
         
-        # Get charging stations near route
+        # Get charging stations near route with enhanced data
         found_stations = {}
-        for lat, lon in samples[:10]:  # Limit to 10 sample points for performance
+        for lat, lon in samples[:15]:  # Increased sample points for better coverage
             params = {
                 "output": "json",
                 "latitude": lat,
                 "longitude": lon,
-                "distance": 10,  # 10km radius
+                "distance": 15,  # 15km radius for better coverage
                 "distanceunit": "KM",
-                "maxresults": 10,
+                "maxresults": 20,  # More stations per sample point
                 "compact": True,
+                "verbose": False,
                 "key": settings.OCM_API_KEY
             }
             try:
-                resp = requests.get("https://api.openchargemap.io/v3/poi/", params=params, timeout=10)
+                resp = requests.get("https://api.openchargemap.io/v3/poi/", params=params, timeout=15)
+                resp.raise_for_status()
                 items = resp.json() or []
                 for item in items:
                     station_id = item.get("ID")
                     if station_id and station_id not in found_stations:
-                        found_stations[station_id] = _clean_ocm_item(item)
-            except:
+                        # Enhanced station cleaning with more details
+                        station = _clean_ocm_item(item)
+                        
+                        # Add additional real data
+                        station["real_data"] = True
+                        station["last_verified"] = item.get("DateLastVerified")
+                        station["date_created"] = item.get("DateCreated")
+                        station["date_last_status_update"] = item.get("DateLastStatusUpdate")
+                        
+                        # Enhanced connection details
+                        if station.get("connections"):
+                            for conn in station["connections"]:
+                                if conn.get("power_kw"):
+                                    conn["charging_speed"] = "Fast" if conn["power_kw"] >= 50 else "Standard"
+                                else:
+                                    conn["charging_speed"] = "Standard"
+                        
+                        found_stations[station_id] = station
+            except Exception as e:
+                print(f"Error fetching stations for {lat},{lon}: {e}")
                 continue
         
         # Add distance to route for each station
         for station in found_stations.values():
             if station.get("lat") and station.get("lon"):
-                min_dist = min([
-                    _haversine_km((station["lat"], station["lon"]), sample) 
-                    for sample in samples
-                ])
-                station["distance_from_route"] = round(min_dist, 1)
+                try:
+                    min_dist = min([
+                        _haversine_km((station["lat"], station["lon"]), sample) 
+                        for sample in samples
+                    ])
+                    station["distance_from_route"] = round(min_dist, 1)
+                except (ValueError, TypeError):
+                    station["distance_from_route"] = 999  # Default high distance if calculation fails
         
-        # Sort stations by proximity to route and power capacity
-        stations_list = sorted(found_stations.values(), 
-                             key=lambda s: (s.get("distance_from_route", 999), 
-                                          -max([c.get("power_kw", 0) or 0 for c in s.get("connections", [])], default=0)))
+        # Enhanced station filtering and sorting
+        def station_score(station):
+            """Calculate a score for station ranking based on multiple factors"""
+            score = 0
+            
+            # Distance from route (closer is better)
+            distance = station.get("distance_from_route", 999)
+            if distance is None:
+                distance = 999
+            if distance <= 2:
+                score += 100
+            elif distance <= 5:
+                score += 80
+            elif distance <= 10:
+                score += 60
+            else:
+                score += 40
+            
+            # Operational status (operational is better)
+            status = (station.get("status") or "").lower()
+            if "operational" in status:
+                score += 50
+            elif "planned" in status or "construction" in status:
+                score += 20
+            else:
+                score += 10
+            
+            # Power capacity (higher is better)
+            powers = [c.get("power_kw", 0) or 0 for c in station.get("connections", [])]
+            max_power = max(powers) if powers else 0
+            if max_power >= 100:
+                score += 40
+            elif max_power >= 50:
+                score += 30
+            elif max_power >= 22:
+                score += 20
+            else:
+                score += 10
+            
+            # Number of connections (more is better)
+            conn_count = len(station.get("connections", []))
+            score += min(conn_count * 5, 25)
+            
+            # Recent verification (more recent is better)
+            if station.get("last_verified"):
+                score += 15
+            
+            return score
+        
+        # Filter and sort stations
+        filtered_stations = []
+        for station in found_stations.values():
+            # Only include stations with valid coordinates
+            if station.get("lat") and station.get("lon"):
+                station["score"] = station_score(station)
+                filtered_stations.append(station)
+        
+        # Sort by score (highest first) and then by distance
+        def sort_key(station):
+            score = station.get("score", 0)
+            distance = station.get("distance_from_route", 999)
+            if distance is None:
+                distance = 999
+            return (-score, distance)
+        
+        stations_list = sorted(filtered_stations, key=sort_key)
         
         # 6. Environmental impact calculation
         co2_per_km_petrol = 2.3  # kg CO2 per km for petrol car
@@ -564,7 +649,12 @@ def plan_trip(request):
         co2_saved = (co2_per_km_petrol - co2_per_km_ev) * distance_km
         trees_equivalent = co2_saved / 22  # 1 tree absorbs ~22kg CO2 per year
         
-        # 7. Build comprehensive response
+                # 7. Build comprehensive response
+        # Debug: Check stations data
+        print(f"Debug: Processing {len(stations_list)} stations")
+        for i, station in enumerate(stations_list[:3]):
+            print(f"Station {i}: {station.get('name', 'Unknown')} - distance: {station.get('distance_from_route')} - score: {station.get('score')}")
+        
         result = {
             "success": True,
             "trip_summary": {
@@ -597,7 +687,15 @@ def plan_trip(request):
                     "ev_kwh_needed": round((distance_km / vehicle_range) * EV_BATTERY_CAPACITY, 2)
                 }
             }],
-            "charging_stations": stations_list[:20],  # Top 20 stations
+            "charging_stations": stations_list[:30],  # Top 30 stations with real data
+            "charging_stations_summary": {
+                "total_found": len(stations_list),
+                "operational_count": len([s for s in stations_list if "operational" in (s.get("status") or "").lower()]),
+                "fast_charging_count": len([s for s in stations_list if any((c.get("power_kw", 0) or 0) >= 50 for c in s.get("connections", []))]),
+                "average_distance_from_route": round(sum(s.get("distance_from_route", 0) for s in stations_list[:10] if s.get("distance_from_route") is not None) / max(len([s for s in stations_list[:10] if s.get("distance_from_route") is not None]), 1), 1),
+                "data_source": "OpenChargeMap API (Real-time)",
+                "last_updated": "Live data"
+            },
             "cost_comparison": {
                 "distance_km": round(distance_km, 1),
                 "ev_cost": round(ev_cost, 2),
